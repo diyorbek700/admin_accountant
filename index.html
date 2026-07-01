@@ -555,7 +555,7 @@ function renderDetail(){
     var html = "";
     entries.forEach(function(e){
       html += '<div class="log-item"><div class="log-dot'+(e.ai?" ai":"")+'">'+mi(e.ai?"cpu":"userCheck",16)+'</div>';
-      html += '<div><div class="log-text">'+e.action+'</div><div class="log-meta">'+e.by+' · '+e.at+'</div></div></div>';
+      html += '<div><div class="log-text">'+e.action+'</div><div class="log-meta">'+(e.ai ? "Определено автоматически" : "Изменено пользователем")+': <strong style="color:var(--text-secondary)">'+e.by+'</strong> · '+e.at+'</div></div></div>';
     });
     body.innerHTML = html;
   }
