@@ -28,30 +28,65 @@
     }
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{margin:0;background:var(--surface-0);color:var(--text-primary);font-family:var(--font-sans);font-size:14px}
-  select,input[type=text]{height:34px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);padding:0 10px;font-size:13px}
+  select,input[type=text]{height:34px;border-radius:var(--radius);border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);padding:0 10px;font-size:13px;transition:border-color .15s}
+  select:hover,input[type=text]:hover{border-color:var(--brand)}
   select:focus,input:focus{outline:2px solid var(--brand);outline-offset:-1px}
   button{font-family:inherit}
-  .app-shell{max-width:1400px;margin:24px auto;display:flex;border:0.5px solid var(--border);border-radius:16px;overflow:hidden;background:var(--surface-2)}
+  .app-shell{width:100%;min-height:100vh;margin:0;display:flex;background:var(--surface-2)}
   .sidebar{width:216px;flex-shrink:0;border-right:0.5px solid var(--border);background:var(--surface-1);padding:16px 10px;display:flex;flex-direction:column;gap:4px}
-  .navitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;cursor:pointer;color:var(--text-secondary);border-left:3px solid transparent}
+  .navitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;cursor:pointer;color:var(--text-secondary);border-left:3px solid transparent;transition:background .15s,color .15s}
+  .navitem:hover{background:var(--brand-tint);color:var(--brand-text)}
   .navitem.active{background:var(--brand-tint);color:var(--brand-text);border-left:3px solid var(--brand)}
-  .btn-primary{background:var(--brand-solid);color:var(--on-brand);border:none;border-radius:var(--radius);font-size:13px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
-  .btn{border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);border-radius:999px;font-size:13px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+  .btn-primary{background:var(--brand-solid);color:var(--on-brand);border:none;border-radius:var(--radius);font-size:13px;padding:8px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:opacity .15s}
+  .btn-primary:hover{opacity:.88}
+  .btn{border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);border-radius:999px;font-size:13px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s}
+  .btn:hover{border-color:var(--brand)}
   .btn.active{background:var(--brand-solid);color:var(--on-brand);border-color:var(--brand-solid)}
-  .metric{background:var(--surface-1);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+  .metric{background:var(--surface-1);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:0.5px solid var(--border);transition:box-shadow .15s}
+  .metric:hover{box-shadow:0 2px 10px rgba(0,0,0,.06)}
   .metric i{font-size:18px;color:var(--brand-text);background:var(--brand-tint);border-radius:8px;padding:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
   .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px}
   table{width:100%;border-collapse:collapse;font-size:12.5px}
-  th{text-align:left;padding:9px 10px;border-bottom:0.5px solid var(--border);background:var(--surface-1)}
-  td{padding:9px 10px;border-bottom:0.5px solid var(--border)}
+  th{text-align:left;padding:10px 10px;border-bottom:0.5px solid var(--border);background:var(--surface-1);font-weight:600;color:var(--text-secondary)}
+  td{padding:10px 10px;border-bottom:0.5px solid var(--border)}
+  tbody tr:hover td{background:var(--brand-tint) !important}
+  tbody tr.row-review:hover td{background:var(--bg-danger) !important}
   .tpl-opt:hover{background:var(--brand-tint) !important}
   .table-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:12px}
+  .acct-chip{display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 7px;border-radius:6px;border:1px dashed var(--border-strong);background:var(--surface-1);transition:border-color .15s,background .15s}
+  .acct-chip:hover{border-color:var(--brand);background:var(--brand-tint)}
+  .acct-chip.open{border:1px solid var(--brand);background:var(--brand-tint)}
+  .acct-chip .chip-label{flex:1;font-size:11.5px}
+  .login-shell{width:100%;min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--surface-0)}
+  .login-card{width:340px;background:var(--surface-2);border:0.5px solid var(--border);border-radius:16px;padding:32px 28px;box-shadow:0 8px 30px rgba(0,0,0,.08)}
+  .login-card input{width:100%;margin-bottom:12px}
+  .login-card .btn-primary{width:100%;justify-content:center;height:38px;font-size:13.5px}
+  .login-error{font-size:12px;color:var(--text-danger);margin-bottom:10px;display:none}
 </style>
 </head>
 <body>
 
-<div class="app-shell">
+<div id="screen-login" class="login-shell">
+  <div class="login-card">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:22px">
+      <div style="width:30px;height:30px;border-radius:8px;background:var(--brand-solid);display:flex;align-items:center;justify-content:center">
+        <i class="ti ti-calculator" style="font-size:17px;color:var(--on-brand)"></i>
+      </div>
+      <div>
+        <div style="font-size:14.5px;font-weight:500">Accountant</div>
+        <div style="font-size:11.5px;color:var(--text-muted)">Вход в админ-панель</div>
+      </div>
+    </div>
+    <div id="login-error" class="login-error">Введите email и пароль</div>
+    <input type="text" id="login-email" placeholder="Email" />
+    <input type="password" id="login-password" placeholder="Пароль" />
+    <button class="btn-primary" onclick="doLogin()">Войти</button>
+  </div>
+</div>
+
+<div id="screen-app" class="app-shell" style="display:none">
 
   <div class="sidebar">
     <div style="display:flex;align-items:center;gap:8px;padding:4px 10px 16px">
@@ -66,9 +101,9 @@
     <div id="nav-tpl" class="navitem" onclick="showScreen('tpl')">
       <i class="ti ti-list-details" style="font-size:17px"></i>Шаблоны учёта
     </div>
-    <div style="margin-top:auto;padding:10px;border-top:0.5px solid var(--border);display:flex;align-items:center;gap:8px">
-      <div style="width:26px;height:26px;border-radius:50%;background:var(--brand-tint);color:var(--brand-text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500">ДА</div>
-      <span style="font-size:12px;color:var(--text-secondary)">Diyorbek</span>
+    <div style="margin-top:auto;padding:10px;border-top:0.5px solid var(--border);display:flex;align-items:center;gap:8px;cursor:pointer" onclick="doLogout()" title="Выйти">
+      <div id="user-avatar" style="width:26px;height:26px;border-radius:50%;background:var(--brand-tint);color:var(--brand-text);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500">ДА</div>
+      <span id="user-name" style="font-size:12px;color:var(--text-secondary)">Diyorbek</span>
     </div>
   </div>
 
@@ -137,9 +172,7 @@
     </div>
 
     <div id="screen-tpl" style="display:none">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-        <button class="btn-primary"><i class="ti ti-plus" style="font-size:14px"></i>Создать шаблон</button>
-      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px">Справочник шаблонов проводок — только просмотр. Создание новых шаблонов недоступно администратору.</div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -200,35 +233,60 @@ function badge(text, bg, fg){
   return '<span class="badge" style="background:'+bg+';color:'+fg+'">'+text+'</span>';
 }
 
-var openAcctPicker = null;
+var currentUser = null;
 
-function templateLabel(r){
-  if(!r.debit || !r.credit){
-    return '<span style="display:flex;align-items:center;gap:5px;color:var(--text-danger);font-size:12px"><i class="ti ti-alert-triangle" style="font-size:14px"></i>не определён</span>';
+function doLogin(){
+  var email = document.getElementById("login-email").value.trim();
+  var pass = document.getElementById("login-password").value.trim();
+  if(!email || !pass){
+    document.getElementById("login-error").style.display = "block";
+    return;
   }
-  var t = templates.find(function(x){ return x.code === r.note; });
-  return '<span style="display:flex;align-items:center;gap:5px;font-size:12px"><i class="ti ti-file-text" style="font-size:14px;color:var(--brand-text)"></i>'+(t ? t.name : r.note)+'</span>';
+  var namePart = email.split("@")[0].replace(/[._]/g, " ");
+  var name = namePart.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+  var initials = name.split(" ").map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase();
+  currentUser = {email: email, name: name, initials: initials};
+  document.getElementById("user-name").textContent = currentUser.name;
+  document.getElementById("user-avatar").textContent = currentUser.initials;
+  document.getElementById("screen-login").style.display = "none";
+  document.getElementById("screen-app").style.display = "flex";
 }
 
-function acctChip(row, field){
-  var code = field === "debit" ? row.debit : row.credit;
-  var name = field === "debit" ? row.debitName : row.creditName;
-  var isOpen = openAcctPicker && openAcctPicker.rowId === row.id && openAcctPicker.field === field;
-  var label = code
-    ? '<i class="ti ti-building-bank" style="font-size:13px;color:var(--brand-text)"></i> '+code+' '+name
-    : '<span style="color:var(--text-danger)"><i class="ti ti-alert-triangle" style="font-size:13px"></i> не указан</span>';
+function doLogout(){
+  currentUser = null;
+  document.getElementById("login-email").value = "";
+  document.getElementById("login-password").value = "";
+  document.getElementById("login-error").style.display = "none";
+  document.getElementById("screen-app").style.display = "none";
+  document.getElementById("screen-login").style.display = "flex";
+}
+
+function accountLabel(code, name){
+  return code
+    ? '<span style="display:flex;align-items:center;gap:5px;font-size:11.5px"><i class="ti ti-building-bank" style="font-size:13px;color:var(--brand-text)"></i>'+code+' '+name+'</span>'
+    : '<span style="color:var(--text-muted);font-size:11.5px">&mdash;</span>';
+}
+
+var openTplPicker = null;
+
+function tplChip(row){
+  var t = templates.find(function(x){ return x.code === row.note; });
+  var isOpen = openTplPicker === row.id;
+  var label = t
+    ? '<i class="ti ti-file-text" style="font-size:13px;color:var(--brand-text)"></i> '+t.name
+    : '<span style="color:var(--text-danger)"><i class="ti ti-alert-triangle" style="font-size:13px"></i> не определён</span>';
 
   var html = '<div style="position:relative">';
-  html += '<div onclick="toggleAcctPicker(\''+row.id+'\',\''+field+'\')" style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 6px;border-radius:6px;border:0.5px solid '+(isOpen?"var(--brand)":"transparent")+'">';
-  html += '<span style="flex:1;font-size:11.5px">'+label+'</span><i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>';
+  html += '<div class="acct-chip'+(isOpen?" open":"")+'" onclick="toggleTplPicker(\''+row.id+'\')" title="Нажмите, чтобы выбрать шаблон проводки">';
+  html += '<span class="chip-label">'+label+'</span><i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>';
   html += '</div>';
   if(isOpen){
-    html += '<div style="position:absolute;top:100%;left:0;z-index:10;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:6px;width:260px">';
-    html += '<input type="text" placeholder="Найти счёт..." style="width:100%;height:28px;margin-bottom:6px" oninput="filterAccounts(\''+row.id+'\',\''+field+'\',this.value)" />';
-    html += '<div id="acct-options-'+row.id+'-'+field+'" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">';
-    accounts.forEach(function(a){
-      html += '<div class="acct-opt" data-name="'+a.name.toLowerCase()+'" onclick="applyAccount(\''+row.id+'\',\''+field+'\',\''+a.code+'\')" style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px">';
-      html += '<span>'+a.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);flex-shrink:0">'+a.code+'</span>';
+    html += '<div style="position:absolute;top:100%;left:0;z-index:10;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:6px;width:280px">';
+    html += '<input type="text" placeholder="Найти шаблон..." style="width:100%;height:28px;margin-bottom:6px" oninput="filterTplPicker(\''+row.id+'\',this.value)" />';
+    html += '<div id="tpl-picker-options-'+row.id+'" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">';
+    templates.forEach(function(tt){
+      html += '<div class="tpl-opt" data-name="'+tt.name.toLowerCase()+'" onclick="applyTemplate(\''+row.id+'\',\''+tt.code+'\')" style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px">';
+      html += '<span>'+tt.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;flex-shrink:0">'+tt.debit+' &rarr; '+tt.credit+'</span>';
       html += '</div>';
     });
     html += '</div></div>';
@@ -237,25 +295,21 @@ function acctChip(row, field){
   return html;
 }
 
-function toggleAcctPicker(rowId, field){
-  openAcctPicker = (openAcctPicker && openAcctPicker.rowId === rowId && openAcctPicker.field === field) ? null : {rowId: rowId, field: field};
+function toggleTplPicker(rowId){
+  openTplPicker = openTplPicker === rowId ? null : rowId;
   renderBankRows();
 }
 
-function filterAccounts(rowId, field, q){
+function filterTplPicker(rowId, q){
   q = q.toLowerCase();
-  document.querySelectorAll("#acct-options-"+rowId+"-"+field+" .acct-opt").forEach(function(el){
+  document.querySelectorAll("#tpl-picker-options-"+rowId+" .tpl-opt").forEach(function(el){
     el.style.display = el.getAttribute("data-name").indexOf(q) > -1 ? "flex" : "none";
   });
 }
 
-function applyAccount(rowId, field, code){
-  var row = bankRows.find(function(x){ return x.id === rowId; });
-  var acct = accounts.find(function(a){ return a.code === code; });
-  if(field === "debit"){ row.debit = acct.code; row.debitName = acct.name; }
-  else { row.credit = acct.code; row.creditName = acct.name; }
-  openAcctPicker = null;
-  renderBankRows();
+function auditNote(row){
+  if(!row.modifiedBy) return "";
+  return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:3px"><i class="ti ti-user-check" style="font-size:11px"></i>'+row.modifiedBy+' · '+row.modifiedAt+'</div>';
 }
 
 function renderBankRows(){
@@ -266,7 +320,7 @@ function renderBankRows(){
     var srcBadge = r.source === "bank" ? badge("bank","var(--brand-tint)","var(--brand-text)") : badge("manual","var(--surface-1)","var(--text-secondary)");
     var statusBadge = r.status === "posted" ? badge("posted","var(--bg-success)","var(--text-success)") : badge("needs_review","var(--bg-danger)","var(--text-danger)");
     var confBadge = r.conf === "high" ? badge("high","var(--brand-tint)","var(--brand-text)") : r.conf === "low" ? badge("low","var(--bg-warning)","var(--text-warning)") : badge("none","var(--surface-1)","var(--text-muted)");
-    var srcIcon = r.source2 === "ai" ? '<i class="ti ti-cpu" style="font-size:15px;color:var(--brand-text)" title="ai"></i>' : '<i class="ti ti-user" style="font-size:15px;color:var(--text-secondary)" title="admin"></i>';
+    var srcIcon = r.source2 === "ai" ? '<i class="ti ti-cpu" style="font-size:15px;color:var(--brand-text)" title="ai"></i>' : '<i class="ti ti-user" style="font-size:15px;color:var(--text-secondary)" title="'+(r.modifiedBy || "admin")+'"></i>';
 
     html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+'">';
     html += '<td style="position:sticky;left:0;'+rowBg+'">'+r.company+'</td>';
@@ -276,9 +330,9 @@ function renderBankRows(){
     html += '<td>'+srcBadge+'</td>';
     html += '<td>'+r.counterparty+'</td>';
     html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.desc+'">'+r.desc+'</td>';
-    html += '<td style="font-size:11.5px">'+templateLabel(r)+'</td>';
-    html += '<td style="font-size:11.5px">'+acctChip(r,"debit")+'</td>';
-    html += '<td style="font-size:11.5px">'+acctChip(r,"credit")+'</td>';
+    html += '<td style="font-size:11.5px">'+tplChip(r)+auditNote(r)+'</td>';
+    html += '<td>'+accountLabel(r.debit, r.debitName)+'</td>';
+    html += '<td>'+accountLabel(r.credit, r.creditName)+'</td>';
     html += '<td>'+r.opDate+'</td>';
     html += '<td style="color:'+(r.contract==="—"?"var(--text-muted)":"var(--text-primary)")+'">'+r.contract+'</td>';
     html += '<td>'+statusBadge+'</td>';
@@ -286,28 +340,8 @@ function renderBankRows(){
     html += '<td>'+confBadge+'</td>';
     html += '<td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">'+r.note+'</td>';
     html += '</tr>';
-
-    if(r.flagged){
-      html += '<tr id="picker-'+r.id+'"><td colspan="16" style="background:var(--surface-1)">';
-      html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Выберите шаблон проводки для этой операции</div>';
-      html += '<input type="text" placeholder="Найти шаблон..." style="width:280px;margin-bottom:8px" oninput="filterTemplates(\''+r.id+'\',this.value)" />';
-      html += '<div id="tpl-options-'+r.id+'" style="display:flex;flex-direction:column;gap:2px;max-width:420px">';
-      templates.forEach(function(t){
-        html += '<div class="tpl-opt" data-name="'+t.name.toLowerCase()+'" onclick="applyTemplate(\''+r.id+'\',\''+t.code+'\')" style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12.5px">';
-        html += '<span>'+t.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">'+t.debit+' &rarr; '+t.credit+'</span>';
-        html += '</div>';
-      });
-      html += '</div></td></tr>';
-    }
   });
   document.getElementById("bank-rows").innerHTML = html;
-}
-
-function filterTemplates(rowId, q){
-  q = q.toLowerCase();
-  document.querySelectorAll("#tpl-options-"+rowId+" .tpl-opt").forEach(function(el){
-    el.style.display = el.getAttribute("data-name").indexOf(q) > -1 ? "flex" : "none";
-  });
 }
 
 function applyTemplate(rowId, code){
@@ -324,6 +358,9 @@ function applyTemplate(rowId, code){
   row.conf = "";
   row.flagged = false;
   row.note = t.code;
+  row.modifiedBy = currentUser ? currentUser.name : "admin";
+  row.modifiedAt = new Date().toLocaleString("ru-RU", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
+  openTplPicker = null;
   renderBankRows();
 }
 
@@ -331,8 +368,7 @@ function filterRows(mode, btn){
   document.querySelectorAll(".btn").forEach(function(b){ b.classList.remove("active"); });
   btn.classList.add("active");
   document.querySelectorAll("#bank-rows tr").forEach(function(tr){
-    if(mode === "all"){ tr.style.display = ""; return; }
-    tr.style.display = tr.className.indexOf("row-review") > -1 || tr.id.indexOf("picker-") === 0 ? "" : "none";
+    tr.style.display = (mode === "all" || tr.className.indexOf("row-review") > -1) ? "" : "none";
   });
 }
 
@@ -352,7 +388,6 @@ function renderTplRows(){
     html += '<td><i class="ti ti-trash" style="font-size:16px;color:var(--text-danger);cursor:pointer"></i></td>';
     html += "</tr>";
   });
-  html += '<tr><td colspan="9" style="color:var(--brand-text);cursor:pointer;font-size:13px"><i class="ti ti-plus" style="font-size:14px;vertical-align:-2px;margin-right:4px"></i>Добавить шаблон</td></tr>';
   document.getElementById("tpl-rows").innerHTML = html;
 }
 
