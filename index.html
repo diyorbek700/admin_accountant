@@ -44,9 +44,6 @@
   .btn{border:0.5px solid var(--border-strong);background:transparent;color:var(--text-primary);border-radius:999px;font-size:13px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:border-color .15s,background .15s}
   .btn:hover{border-color:var(--brand)}
   .btn.active{background:var(--brand-solid);color:var(--on-brand);border-color:var(--brand-solid)}
-  .metric{background:var(--surface-1);border-radius:12px;padding:14px 16px;display:flex;flex-direction:column;gap:6px;border:0.5px solid var(--border);transition:box-shadow .15s}
-  .metric:hover{box-shadow:0 2px 10px rgba(0,0,0,.06)}
-  .metric i{font-size:18px;color:var(--brand-text);background:var(--brand-tint);border-radius:8px;padding:6px;width:30px;height:30px;display:flex;align-items:center;justify-content:center}
   .badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px}
   table{width:100%;border-collapse:collapse;font-size:12.5px}
   th{text-align:left;padding:10px 10px;border-bottom:0.5px solid var(--border);background:var(--surface-1);font-weight:600;color:var(--text-secondary)}
@@ -64,6 +61,33 @@
   .login-card input{width:100%;margin-bottom:12px}
   .login-card .btn-primary{width:100%;justify-content:center;height:38px;font-size:13.5px}
   .login-error{font-size:12px;color:var(--text-danger);margin-bottom:10px;display:none}
+
+  .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+  .metric-card{position:relative;background:var(--surface-2);border:0.5px solid var(--border);border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:12px;transition:box-shadow .18s,transform .18s}
+  .metric-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.07);transform:translateY(-2px)}
+  .metric-top{display:flex;align-items:center;justify-content:space-between}
+  .metric-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .metric-icon svg{width:19px;height:19px}
+  .metric-period{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text-muted);cursor:pointer;padding:4px 8px 4px 10px;border-radius:999px;border:0.5px solid var(--border);position:relative;user-select:none;transition:border-color .15s,color .15s}
+  .metric-period:hover{border-color:var(--brand);color:var(--brand-text)}
+  .metric-period svg{width:11px;height:11px;transition:transform .15s}
+  .metric-period.open svg{transform:rotate(180deg)}
+  .metric-period-menu{position:absolute;top:calc(100% + 6px);right:0;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:10px;box-shadow:0 10px 28px rgba(0,0,0,.16);padding:4px;width:130px;z-index:20;display:none}
+  .metric-period.open .metric-period-menu{display:block}
+  .metric-period-opt{padding:7px 9px;border-radius:6px;font-size:12px;color:var(--text-primary);cursor:pointer}
+  .metric-period-opt:hover{background:var(--brand-tint);color:var(--brand-text)}
+  .metric-label{font-size:12px;color:var(--text-secondary);font-weight:500}
+  .metric-value{font-size:23px;font-weight:600;letter-spacing:-.3px;line-height:1.1}
+  .metric-foot{font-size:11.5px;display:flex;align-items:center;gap:5px;font-weight:500}
+  .metric-foot svg{width:12px;height:12px;flex-shrink:0}
+  .metric-foot.up{color:var(--text-success)}
+  .metric-foot.down{color:var(--text-danger)}
+  .metric-foot.neutral{color:var(--text-muted);font-weight:400}
+  .metric-bar{height:5px;border-radius:999px;background:var(--surface-1);overflow:hidden}
+  .metric-bar-fill{height:100%;border-radius:999px;background:var(--brand-solid)}
+  .search-wrap{position:relative;flex:1;min-width:160px}
+  .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:var(--text-muted)}
+  .search-wrap input{width:100%;padding-left:32px}
 </style>
 </head>
 <body>
@@ -122,18 +146,112 @@
 
     <div id="screen-bank">
 
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-        <div class="metric"><i class="ti ti-arrow-down-left"></i><span style="font-size:12px;color:var(--text-secondary)">Поступления</span><span style="font-size:19px;font-weight:500">1 244 M</span></div>
-        <div class="metric"><i class="ti ti-arrow-up-right"></i><span style="font-size:12px;color:var(--text-secondary)">Выплаты</span><span style="font-size:19px;font-weight:500">63 M</span></div>
-        <div class="metric"><i class="ti ti-checkbox"></i><span style="font-size:12px;color:var(--text-secondary)">Проведено</span><span style="font-size:19px;font-weight:500">4</span></div>
-        <div class="metric"><i class="ti ti-alert-triangle"></i><span style="font-size:12px;color:var(--text-secondary)">Нужна проверка</span><span style="font-size:19px;font-weight:500;color:var(--text-danger)">2</span></div>
+      <div class="metric-grid">
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <div class="metric-icon" style="background:var(--bg-success);color:var(--text-success)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7L7 17"/><path d="M7 8v9h9"/></svg>
+            </div>
+            <div class="metric-period" onclick="toggleMetricMenu(this,event)">
+              <span class="metric-period-label">Месяц</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="metric-period-menu">
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Неделя')">Неделя</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Месяц')">Месяц</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Квартал')">Квартал</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Год')">Год</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-label">Поступления</div>
+          <div class="metric-value">1 244 M</div>
+          <div class="metric-foot up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></svg>
+            +12.4% к прошлому месяцу
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <div class="metric-icon" style="background:var(--bg-danger);color:var(--text-danger)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M8 7h9v9"/></svg>
+            </div>
+            <div class="metric-period" onclick="toggleMetricMenu(this,event)">
+              <span class="metric-period-label">Месяц</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="metric-period-menu">
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Неделя')">Неделя</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Месяц')">Месяц</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Квартал')">Квартал</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Год')">Год</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-label">Выплаты</div>
+          <div class="metric-value">63 M</div>
+          <div class="metric-foot up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M5 12l7 7 7-7"/></svg>
+            -3.1% к прошлому месяцу
+          </div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <div class="metric-icon" style="background:var(--brand-tint);color:var(--brand-text)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 5-5"/></svg>
+            </div>
+            <div class="metric-period" onclick="toggleMetricMenu(this,event)">
+              <span class="metric-period-label">Месяц</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="metric-period-menu">
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Неделя')">Неделя</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Месяц')">Месяц</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Квартал')">Квартал</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Год')">Год</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-label">Проведено</div>
+          <div class="metric-value">4</div>
+          <div class="metric-bar"><div class="metric-bar-fill" style="width:66%"></div></div>
+          <div class="metric-foot neutral">4 из 6 операций подтверждены</div>
+        </div>
+
+        <div class="metric-card">
+          <div class="metric-top">
+            <div class="metric-icon" style="background:var(--bg-warning);color:var(--text-warning)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
+            </div>
+            <div class="metric-period" onclick="toggleMetricMenu(this,event)">
+              <span class="metric-period-label">Месяц</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+              <div class="metric-period-menu">
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Неделя')">Неделя</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Месяц')">Месяц</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Квартал')">Квартал</div>
+                <div class="metric-period-opt" onclick="selectPeriod(event,this,'Год')">Год</div>
+              </div>
+            </div>
+          </div>
+          <div class="metric-label">Нужна проверка</div>
+          <div class="metric-value" style="color:var(--text-danger)">2</div>
+          <div class="metric-foot" style="color:var(--text-warning)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l10 18H2L12 3z"/><path d="M12 9v5"/><circle cx="12" cy="17" r=".6" fill="currentColor" stroke="none"/></svg>
+            требует внимания бухгалтера
+          </div>
+        </div>
+
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;align-items:center">
         <select style="width:150px"><option>Компания: все</option><option>UDEVS</option><option>HISOBIM</option></select>
         <select style="width:150px"><option>Статус: все</option><option>posted</option><option>needs_review</option></select>
         <select style="width:150px"><option>Confidence: все</option><option>high</option><option>low</option><option>none</option></select>
-        <input type="text" placeholder="Поиск по описанию" style="flex:1;min-width:160px" />
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input type="text" placeholder="Поиск по описанию" />
+        </div>
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
@@ -232,6 +350,24 @@ var bankRows = [
 function badge(text, bg, fg){
   return '<span class="badge" style="background:'+bg+';color:'+fg+'">'+text+'</span>';
 }
+
+function toggleMetricMenu(el, ev){
+  ev.stopPropagation();
+  var wasOpen = el.classList.contains("open");
+  document.querySelectorAll(".metric-period.open").forEach(function(m){ m.classList.remove("open"); });
+  if(!wasOpen) el.classList.add("open");
+}
+
+function selectPeriod(ev, optionEl, label){
+  ev.stopPropagation();
+  var wrap = optionEl.closest(".metric-period");
+  wrap.querySelector(".metric-period-label").textContent = label;
+  wrap.classList.remove("open");
+}
+
+document.addEventListener("click", function(){
+  document.querySelectorAll(".metric-period.open").forEach(function(m){ m.classList.remove("open"); });
+});
 
 var currentUser = null;
 
