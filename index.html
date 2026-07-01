@@ -110,7 +110,7 @@
       </div>
 
       <div class="table-wrap">
-        <table style="min-width:1500px">
+        <table style="min-width:1750px">
           <thead>
             <tr>
               <th style="position:sticky;left:0;z-index:2;background:var(--surface-1);min-width:170px">Компания</th>
@@ -120,7 +120,9 @@
               <th style="min-width:80px">Источник</th>
               <th style="min-width:160px">Контрагент</th>
               <th style="min-width:180px">Описание</th>
-              <th style="min-width:110px">Шаблон проводки</th>
+              <th style="min-width:150px">Шаблон</th>
+              <th style="min-width:210px">Дебет счёт</th>
+              <th style="min-width:210px">Кредит счёт</th>
               <th style="min-width:95px">Дата операции</th>
               <th style="min-width:90px">Договор</th>
               <th style="min-width:105px">Статус</th>
@@ -173,31 +175,98 @@ var templates = [
   {code:"BANK_OUT_CONVERSION", name:"За конвертацию", debit:5530, credit:5110, direction:"expense"}
 ];
 
+var accounts = [
+  {code:"5110", name:"Hisob-kitob hisobvarag'i"},
+  {code:"5530", name:"Valyuta hisob-kitob hisobvarag'i"},
+  {code:"6010", name:"Mol yetkazib beruvchilarga va pudratchilarga to'lovlar"},
+  {code:"6310", name:"Xaridorlar va buyurtmachilardan olingan bo'naklar — joriy qismi"},
+  {code:"6710", name:"Ish haqi bo'yicha xodimlar bilan hisob-kitoblar"},
+  {code:"4010", name:"Xaridorlar va buyurtmachilar bilan hisob-kitoblar"},
+  {code:"4310", name:"Ijara bo'yicha hisob-kitoblar"},
+  {code:"9010", name:"Asosiy faoliyatdan boshqa daromadlar"},
+  {code:"9430", name:"Boshqa operatsion xarajatlar"}
+];
+
 var bankRows = [
-  {company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"508 200 000", type:"in", source:"bank", counterparty:'"UNIVERSITY OF BUSINESS AND SCIENCE" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011100111 предоплата по Договору о...", debit:"5110", debitName:"Hisob-kitob hisobvarag'i", credit:"6310", creditName:"Xaridorlar va buyurtmachilardan olingan bo'naklar", opDate:"30.06.2026", contract:"22.06.2026", status:"posted", source2:"ai", conf:"high", note:"BANK_IN_SALES"},
-  {company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"10 000 000", type:"out", source:"bank", counterparty:'"CHET EL KAPITALI ISHTIROKIDAGI HAMKORBANK" AKSIYADORLIK TIJORAT BANKI', desc:"00111 16.02.2026dagi №СЛ 114 sonli s...", debit:"6010", debitName:"Mol yetkazib beruvchilarga to'lovlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"07.01.2026", contract:"16.02.2026 · СЛ 114", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SUPPLIER"},
-  {company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"400 000", type:"in", source:"bank", counterparty:'"LA VITA BOTTLERS" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011000111 договору № 692 от 16.07.2...", debit:"", debitName:"", credit:"", creditName:"", opDate:"18.06.2026", contract:"16.07.2024 · 692", status:"needs_review", source2:"ai", conf:"none", note:"UNSURE | none", flagged:true, id:"row-flag-1"},
-  {company:"HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"manual", amount:"9 000 002", type:"out", source:"manual", counterparty:"OSTONOV ALIBEK ALISHER O'G'LI", desc:"00111 ВС 03.06.2026 погашение Деб...", debit:"", debitName:"", credit:"", creditName:"", opDate:"30.06.2026", contract:"—", status:"needs_review", source2:"ai", conf:"low", note:"BANK_IN_DEBT_PAYMENT", flagged:true, id:"row-flag-2"},
-  {company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"23106000705191969001", amount:"9 958 333", type:"out", source:"bank", counterparty:"IBROHIMOV SHOHZOD SOHIBJON O'G'LI", desc:"006343 зачисление на счет пласт. карты", debit:"6710", debitName:"Ish haqi bo'yicha xodimlar bilan hisob-kitoblar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"06.05.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SALARY"},
-  {company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"2 000", type:"out", source:"bank", counterparty:"—", desc:"00111 ВС 23.06.2026 погашение за п...", debit:"9430", debitName:"Boshqa operatsion xarajatlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"23.06.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_BANK_FEE"}
+  {id:"row-1", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"508 200 000", type:"in", source:"bank", counterparty:'"UNIVERSITY OF BUSINESS AND SCIENCE" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011100111 предоплата по Договору о...", debit:"5110", debitName:"Hisob-kitob hisobvarag'i", credit:"6310", creditName:"Xaridorlar va buyurtmachilardan olingan bo'naklar", opDate:"30.06.2026", contract:"22.06.2026", status:"posted", source2:"ai", conf:"high", note:"BANK_IN_SALES"},
+  {id:"row-2", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"10 000 000", type:"out", source:"bank", counterparty:'"CHET EL KAPITALI ISHTIROKIDAGI HAMKORBANK" AKSIYADORLIK TIJORAT BANKI', desc:"00111 16.02.2026dagi №СЛ 114 sonli s...", debit:"6010", debitName:"Mol yetkazib beruvchilarga to'lovlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"07.01.2026", contract:"16.02.2026 · СЛ 114", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SUPPLIER"},
+  {id:"row-flag-1", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"400 000", type:"in", source:"bank", counterparty:'"LA VITA BOTTLERS" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011000111 договору № 692 от 16.07.2...", debit:"", debitName:"", credit:"", creditName:"", opDate:"18.06.2026", contract:"16.07.2024 · 692", status:"needs_review", source2:"ai", conf:"none", note:"UNSURE | none", flagged:true},
+  {id:"row-flag-2", company:"HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"manual", amount:"9 000 002", type:"out", source:"manual", counterparty:"OSTONOV ALIBEK ALISHER O'G'LI", desc:"00111 ВС 03.06.2026 погашение Деб...", debit:"", debitName:"", credit:"", creditName:"", opDate:"30.06.2026", contract:"—", status:"needs_review", source2:"ai", conf:"low", note:"BANK_IN_DEBT_PAYMENT", flagged:true},
+  {id:"row-5", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"23106000705191969001", amount:"9 958 333", type:"out", source:"bank", counterparty:"IBROHIMOV SHOHZOD SOHIBJON O'G'LI", desc:"006343 зачисление на счет пласт. карты", debit:"6710", debitName:"Ish haqi bo'yicha xodimlar bilan hisob-kitoblar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"06.05.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SALARY"},
+  {id:"row-6", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"2 000", type:"out", source:"bank", counterparty:"—", desc:"00111 ВС 23.06.2026 погашение за п...", debit:"9430", debitName:"Boshqa operatsion xarajatlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"23.06.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_BANK_FEE"}
 ];
 
 function badge(text, bg, fg){
   return '<span class="badge" style="background:'+bg+';color:'+fg+'">'+text+'</span>';
 }
 
+var openAcctPicker = null;
+
+function templateLabel(r){
+  if(!r.debit || !r.credit){
+    return '<span style="display:flex;align-items:center;gap:5px;color:var(--text-danger);font-size:12px"><i class="ti ti-alert-triangle" style="font-size:14px"></i>не определён</span>';
+  }
+  var t = templates.find(function(x){ return x.code === r.note; });
+  return '<span style="display:flex;align-items:center;gap:5px;font-size:12px"><i class="ti ti-file-text" style="font-size:14px;color:var(--brand-text)"></i>'+(t ? t.name : r.note)+'</span>';
+}
+
+function acctChip(row, field){
+  var code = field === "debit" ? row.debit : row.credit;
+  var name = field === "debit" ? row.debitName : row.creditName;
+  var isOpen = openAcctPicker && openAcctPicker.rowId === row.id && openAcctPicker.field === field;
+  var label = code
+    ? '<i class="ti ti-building-bank" style="font-size:13px;color:var(--brand-text)"></i> '+code+' '+name
+    : '<span style="color:var(--text-danger)"><i class="ti ti-alert-triangle" style="font-size:13px"></i> не указан</span>';
+
+  var html = '<div style="position:relative">';
+  html += '<div onclick="toggleAcctPicker(\''+row.id+'\',\''+field+'\')" style="display:flex;align-items:center;gap:5px;cursor:pointer;padding:4px 6px;border-radius:6px;border:0.5px solid '+(isOpen?"var(--brand)":"transparent")+'">';
+  html += '<span style="flex:1;font-size:11.5px">'+label+'</span><i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>';
+  html += '</div>';
+  if(isOpen){
+    html += '<div style="position:absolute;top:100%;left:0;z-index:10;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:6px;width:260px">';
+    html += '<input type="text" placeholder="Найти счёт..." style="width:100%;height:28px;margin-bottom:6px" oninput="filterAccounts(\''+row.id+'\',\''+field+'\',this.value)" />';
+    html += '<div id="acct-options-'+row.id+'-'+field+'" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">';
+    accounts.forEach(function(a){
+      html += '<div class="acct-opt" data-name="'+a.name.toLowerCase()+'" onclick="applyAccount(\''+row.id+'\',\''+field+'\',\''+a.code+'\')" style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px">';
+      html += '<span>'+a.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);flex-shrink:0">'+a.code+'</span>';
+      html += '</div>';
+    });
+    html += '</div></div>';
+  }
+  html += '</div>';
+  return html;
+}
+
+function toggleAcctPicker(rowId, field){
+  openAcctPicker = (openAcctPicker && openAcctPicker.rowId === rowId && openAcctPicker.field === field) ? null : {rowId: rowId, field: field};
+  renderBankRows();
+}
+
+function filterAccounts(rowId, field, q){
+  q = q.toLowerCase();
+  document.querySelectorAll("#acct-options-"+rowId+"-"+field+" .acct-opt").forEach(function(el){
+    el.style.display = el.getAttribute("data-name").indexOf(q) > -1 ? "flex" : "none";
+  });
+}
+
+function applyAccount(rowId, field, code){
+  var row = bankRows.find(function(x){ return x.id === rowId; });
+  var acct = accounts.find(function(a){ return a.code === code; });
+  if(field === "debit"){ row.debit = acct.code; row.debitName = acct.name; }
+  else { row.credit = acct.code; row.creditName = acct.name; }
+  openAcctPicker = null;
+  renderBankRows();
+}
+
 function renderBankRows(){
   var html = "";
   bankRows.forEach(function(r){
-    var rowBg = r.flagged ? "background:var(--bg-danger)" : "";
+    var rowBg = r.flagged ? "background:var(--bg-danger)" : "background:var(--surface-2)";
     var typeBadge = r.type === "in" ? badge("Поступление","var(--bg-success)","var(--text-success)") : badge("Выплата","var(--bg-danger)","var(--text-danger)");
     var srcBadge = r.source === "bank" ? badge("bank","var(--brand-tint)","var(--brand-text)") : badge("manual","var(--surface-1)","var(--text-secondary)");
     var statusBadge = r.status === "posted" ? badge("posted","var(--bg-success)","var(--text-success)") : badge("needs_review","var(--bg-danger)","var(--text-danger)");
     var confBadge = r.conf === "high" ? badge("high","var(--brand-tint)","var(--brand-text)") : r.conf === "low" ? badge("low","var(--bg-warning)","var(--text-warning)") : badge("none","var(--surface-1)","var(--text-muted)");
     var srcIcon = r.source2 === "ai" ? '<i class="ti ti-cpu" style="font-size:15px;color:var(--brand-text)" title="ai"></i>' : '<i class="ti ti-user" style="font-size:15px;color:var(--text-secondary)" title="admin"></i>';
-    var templateCell = r.debit
-      ? r.debit+" "+r.debitName+" &rarr;<br/>"+r.credit+" "+r.creditName
-      : '<span style="display:flex;align-items:center;gap:5px;color:var(--text-danger);font-size:12px"><i class="ti ti-alert-triangle" style="font-size:14px"></i>не определён</span>';
 
     html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+'">';
     html += '<td style="position:sticky;left:0;'+rowBg+'">'+r.company+'</td>';
@@ -207,7 +276,9 @@ function renderBankRows(){
     html += '<td>'+srcBadge+'</td>';
     html += '<td>'+r.counterparty+'</td>';
     html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.desc+'">'+r.desc+'</td>';
-    html += '<td style="font-size:11.5px" id="tplcell-'+(r.id||'')+'">'+templateCell+'</td>';
+    html += '<td style="font-size:11.5px">'+templateLabel(r)+'</td>';
+    html += '<td style="font-size:11.5px">'+acctChip(r,"debit")+'</td>';
+    html += '<td style="font-size:11.5px">'+acctChip(r,"credit")+'</td>';
     html += '<td>'+r.opDate+'</td>';
     html += '<td style="color:'+(r.contract==="—"?"var(--text-muted)":"var(--text-primary)")+'">'+r.contract+'</td>';
     html += '<td>'+statusBadge+'</td>';
@@ -216,11 +287,11 @@ function renderBankRows(){
     html += '<td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">'+r.note+'</td>';
     html += '</tr>';
 
-    if(r.id === "row-flag-1"){
-      html += '<tr id="picker-'+r.id+'"><td colspan="14" style="background:var(--surface-1)">';
+    if(r.flagged){
+      html += '<tr id="picker-'+r.id+'"><td colspan="16" style="background:var(--surface-1)">';
       html += '<div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px">Выберите шаблон проводки для этой операции</div>';
-      html += '<input type="text" placeholder="Найти шаблон..." style="width:280px;margin-bottom:8px" oninput="filterTemplates(this.value)" />';
-      html += '<div id="tpl-options" style="display:flex;flex-direction:column;gap:2px;max-width:420px">';
+      html += '<input type="text" placeholder="Найти шаблон..." style="width:280px;margin-bottom:8px" oninput="filterTemplates(\''+r.id+'\',this.value)" />';
+      html += '<div id="tpl-options-'+r.id+'" style="display:flex;flex-direction:column;gap:2px;max-width:420px">';
       templates.forEach(function(t){
         html += '<div class="tpl-opt" data-name="'+t.name.toLowerCase()+'" onclick="applyTemplate(\''+r.id+'\',\''+t.code+'\')" style="display:flex;justify-content:space-between;padding:7px 10px;border-radius:8px;cursor:pointer;font-size:12.5px">';
         html += '<span>'+t.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px">'+t.debit+' &rarr; '+t.credit+'</span>';
@@ -232,9 +303,9 @@ function renderBankRows(){
   document.getElementById("bank-rows").innerHTML = html;
 }
 
-function filterTemplates(q){
+function filterTemplates(rowId, q){
   q = q.toLowerCase();
-  document.querySelectorAll(".tpl-opt").forEach(function(el){
+  document.querySelectorAll("#tpl-options-"+rowId+" .tpl-opt").forEach(function(el){
     el.style.display = el.getAttribute("data-name").indexOf(q) > -1 ? "flex" : "none";
   });
 }
@@ -242,10 +313,12 @@ function filterTemplates(q){
 function applyTemplate(rowId, code){
   var t = templates.find(function(x){ return x.code === code; });
   var row = bankRows.find(function(x){ return x.id === rowId; });
+  var debitAcct = accounts.find(function(a){ return a.code === String(t.debit); });
+  var creditAcct = accounts.find(function(a){ return a.code === String(t.credit); });
   row.debit = String(t.debit);
-  row.debitName = t.name;
+  row.debitName = debitAcct ? debitAcct.name : "";
   row.credit = String(t.credit);
-  row.creditName = "";
+  row.creditName = creditAcct ? creditAcct.name : "";
   row.status = "posted";
   row.source2 = "admin";
   row.conf = "";
