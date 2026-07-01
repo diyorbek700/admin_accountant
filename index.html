@@ -14,6 +14,7 @@
     --bg-success:#e6f4ea;--text-success:#1e7d3a;
     --bg-danger:#fbe9e9;--text-danger:#b3261e;
     --bg-warning:#fdf1dc;--text-warning:#8a5b0b;
+    --row-hover:#e2eff0;
     --radius:8px;--font-mono:"SFMono-Regular",Consolas,monospace;--font-sans:-apple-system,Segoe UI,Roboto,sans-serif;
   }
   @media (prefers-color-scheme: dark){
@@ -25,6 +26,7 @@
       --bg-success:#173a22;--text-success:#7ed99a;
       --bg-danger:#3a1c1a;--text-danger:#f2a29e;
       --bg-warning:#3a2c10;--text-warning:#f0c274;
+      --row-hover:#243a3d;
     }
   }
   *{box-sizing:border-box}
@@ -49,7 +51,7 @@
   table{width:100%;border-collapse:collapse;font-size:12.5px}
   th{text-align:left;padding:10px 10px;border-bottom:0.5px solid var(--border);background:var(--surface-1);font-weight:600;color:var(--text-secondary)}
   td{padding:10px 10px;border-bottom:0.5px solid var(--border)}
-  tbody tr:hover td{background:var(--brand-tint) !important}
+  tbody tr:hover td{background:var(--row-hover) !important}
   tbody tr.row-review:hover td{background:var(--bg-danger) !important}
   .tpl-opt:hover{background:var(--brand-tint) !important}
   .table-wrap{overflow-x:auto;border:0.5px solid var(--border);border-radius:12px}
@@ -344,7 +346,6 @@
               <th style="min-width:80px">Источник</th>
               <th style="min-width:160px">Контрагент</th>
               <th style="min-width:180px">Описание</th>
-              <th style="min-width:150px">Шаблон</th>
               <th style="min-width:210px">Дебет счёт</th>
               <th style="min-width:210px">Кредит счёт</th>
               <th style="min-width:95px">Дата операции</th>
@@ -353,6 +354,7 @@
               <th style="min-width:70px">Source</th>
               <th style="min-width:80px">Confidence</th>
               <th style="min-width:130px">Posting note</th>
+              <th style="min-width:170px">Шаблон</th>
             </tr>
           </thead>
           <tbody id="bank-rows"></tbody>
@@ -567,7 +569,6 @@ function renderBankRows(){
     html += '<td>'+srcBadge+'</td>';
     html += '<td>'+r.counterparty+'</td>';
     html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.desc+'">'+r.desc+'</td>';
-    html += '<td style="font-size:11.5px">'+tplChip(r)+auditNote(r)+'</td>';
     html += '<td>'+accountLabel(r.debit, r.debitName)+'</td>';
     html += '<td>'+accountLabel(r.credit, r.creditName)+'</td>';
     html += '<td>'+r.opDate+'</td>';
@@ -576,6 +577,7 @@ function renderBankRows(){
     html += '<td>'+srcIcon+'</td>';
     html += '<td>'+confBadge+'</td>';
     html += '<td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">'+r.note+'</td>';
+    html += '<td style="font-size:11.5px">'+tplChip(r)+auditNote(r)+'</td>';
     html += '</tr>';
   });
   document.getElementById("bank-rows").innerHTML = html;
