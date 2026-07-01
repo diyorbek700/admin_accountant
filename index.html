@@ -129,6 +129,28 @@
   #screen-title{font-size:19px !important;font-weight:700 !important;letter-spacing:-.3px}
   #screen-sub{font-size:12.5px !important}
   th{text-transform:uppercase;font-size:10.5px !important;letter-spacing:.05em}
+
+  .modal-backdrop{position:fixed;inset:0;background:rgba(10,14,15,.45);z-index:100;display:none;align-items:center;justify-content:center;padding:20px}
+  .modal-backdrop.open{display:flex}
+  .modal-card{width:620px;max-width:100%;max-height:84vh;overflow:auto;background:var(--surface-2);border-radius:16px;box-shadow:0 30px 70px rgba(0,0,0,.28)}
+  .modal-head{padding:20px 22px;border-bottom:0.5px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:sticky;top:0;background:var(--surface-2);z-index:1}
+  .modal-close{cursor:pointer;color:var(--text-muted);width:20px;height:20px;flex-shrink:0;transition:color .15s}
+  .modal-close:hover{color:var(--text-danger)}
+  .modal-tabs{display:flex;gap:22px;padding:0 22px;border-bottom:0.5px solid var(--border);position:sticky;top:73px;background:var(--surface-2);z-index:1}
+  .modal-tab{padding:12px 0;font-size:13px;color:var(--text-secondary);cursor:pointer;border-bottom:2px solid transparent;font-weight:500;transition:color .15s,border-color .15s}
+  .modal-tab:hover{color:var(--brand-text)}
+  .modal-tab.active{color:var(--brand-text);border-bottom-color:var(--brand)}
+  .modal-body{padding:18px 22px 22px}
+  .detail-row{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-bottom:0.5px solid var(--border);font-size:13px}
+  .detail-row:last-child{border-bottom:none}
+  .detail-label{color:var(--text-muted);flex-shrink:0}
+  .detail-value{font-weight:500;text-align:right}
+  .log-item{display:flex;gap:12px;padding:14px 0;border-bottom:0.5px solid var(--border)}
+  .log-item:last-child{border-bottom:none}
+  .log-dot{width:30px;height:30px;border-radius:50%;background:var(--brand-tint);color:var(--brand-text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .log-dot.ai{background:var(--surface-1);color:var(--text-secondary)}
+  .log-text{font-size:13px;font-weight:500}
+  .log-meta{font-size:11.5px;color:var(--text-muted);margin-top:3px}
 </style>
 </head>
 <body>
@@ -211,8 +233,8 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </div>
         <div class="csel-menu">
-          <div class="csel-opt selected" onclick="selectCsel(event,this,'UDEVS MAS\'ULIYATI CHEKLANGAN JAMIYAT')">UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
-          <div class="csel-opt" onclick="selectCsel(event,this,'HISOBIM MAS\'ULIYATI CHEKLANGAN JAMIYAT')">HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+          <div class="csel-opt selected" onclick="selectCsel(event,this,null,null,'UDEVS MAS\'ULIYATI CHEKLANGAN JAMIYAT')">UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
+          <div class="csel-opt" onclick="selectCsel(event,this,null,null,'HISOBIM MAS\'ULIYATI CHEKLANGAN JAMIYAT')">HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
         </div>
       </div>
     </div>
@@ -323,7 +345,7 @@
         <div id="csel-conf" class="csel"></div>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" placeholder="Поиск по описанию" />
+          <input type="text" placeholder="Поиск по описанию" oninput="filters.search=this.value.toLowerCase();applyFilters()" />
         </div>
       </div>
 
@@ -387,6 +409,24 @@
   </div>
 </div>
 
+<div id="detail-backdrop" class="modal-backdrop" onclick="if(event.target===this)closeDetail()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Операция</div>
+        <div id="detail-title" style="font-size:17px;font-weight:700"></div>
+        <div id="detail-sub" style="font-size:12.5px;color:var(--text-muted);margin-top:3px"></div>
+      </div>
+      <svg class="modal-close" onclick="closeDetail()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+    </div>
+    <div class="modal-tabs">
+      <div class="modal-tab active" id="tab-info" onclick="switchDetailTab('info')">Информация</div>
+      <div class="modal-tab" id="tab-log" onclick="switchDetailTab('log')">История изменений</div>
+    </div>
+    <div class="modal-body" id="detail-body"></div>
+  </div>
+</div>
+
 <script>
 var templates = [
   {code:"BANK_IN_SALES", name:"Поступлении от продаж", debit:5110, credit:6310, direction:"income"},
@@ -441,12 +481,14 @@ function selectPeriod(ev, optionEl, label){
 var checkSvg = '<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
 var chevronSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
 
-function buildCsel(containerId, options, width){
+var filters = {company:"all", status:"all", conf:"all", mode:"all", search:""};
+
+function buildCsel(containerId, field, options, width){
   var html = '<div class="csel-trigger" style="width:'+width+'px" onclick="toggleCsel(this.parentElement,event)">';
-  html += '<span class="csel-label">'+options[0]+'</span>'+chevronSvg+'</div>';
+  html += '<span class="csel-label">'+options[0].label+'</span>'+chevronSvg+'</div>';
   html += '<div class="csel-menu">';
   options.forEach(function(opt, i){
-    html += '<div class="csel-opt'+(i===0?" selected":"")+'" onclick="selectCsel(event,this,\''+opt.replace(/'/g,"\\'")+'\')">'+opt+checkSvg+'</div>';
+    html += '<div class="csel-opt'+(i===0?" selected":"")+'" onclick="selectCsel(event,this,\''+field+'\',\''+opt.value+'\',\''+opt.label.replace(/'/g,"\\'")+'\')">'+opt.label+checkSvg+'</div>';
   });
   html += '</div>';
   document.getElementById(containerId).innerHTML = html;
@@ -459,13 +501,29 @@ function toggleCsel(el, ev){
   if(!wasOpen) el.classList.add("open");
 }
 
-function selectCsel(ev, optionEl, label){
+function selectCsel(ev, optionEl, field, value, label){
   ev.stopPropagation();
   var wrap = optionEl.closest(".csel");
   wrap.querySelector(".csel-label").textContent = label;
   wrap.querySelectorAll(".csel-opt").forEach(function(o){ o.classList.remove("selected"); });
   optionEl.classList.add("selected");
   wrap.classList.remove("open");
+  if(field){
+    filters[field] = value;
+    applyFilters();
+  }
+}
+
+function applyFilters(){
+  document.querySelectorAll("#bank-rows tr[data-id]").forEach(function(tr){
+    var show = true;
+    if(filters.mode === "review" && tr.dataset.status !== "needs_review") show = false;
+    if(filters.company !== "all" && tr.dataset.company !== filters.company) show = false;
+    if(filters.status !== "all" && tr.dataset.status !== filters.status) show = false;
+    if(filters.conf !== "all" && tr.dataset.conf !== filters.conf) show = false;
+    if(filters.search && tr.dataset.desc.indexOf(filters.search) === -1) show = false;
+    tr.style.display = show ? "" : "none";
+  });
 }
 
 document.addEventListener("click", function(){
@@ -515,7 +573,7 @@ function tplChip(row){
     ? '<i class="ti ti-file-text" style="font-size:13px;color:var(--brand-text)"></i> '+t.name
     : '<span style="color:var(--text-danger)"><i class="ti ti-alert-triangle" style="font-size:13px"></i> не определён</span>';
 
-  var html = '<div style="position:relative">';
+  var html = '<div style="position:relative" onclick="event.stopPropagation()">';
   html += '<div class="acct-chip'+(isOpen?" open":"")+'" onclick="toggleTplPicker(\''+row.id+'\')" title="Нажмите, чтобы выбрать шаблон проводки">';
   html += '<span class="chip-label">'+label+'</span><i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>';
   html += '</div>';
@@ -551,6 +609,75 @@ function auditNote(row){
   return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:3px"><i class="ti ti-user-check" style="font-size:11px"></i>'+row.modifiedBy+' · '+row.modifiedAt+'</div>';
 }
 
+var currentDetailRow = null;
+var currentDetailTab = "info";
+
+function openDetail(rowId){
+  currentDetailRow = rowId;
+  currentDetailTab = "info";
+  document.getElementById("tab-info").classList.add("active");
+  document.getElementById("tab-log").classList.remove("active");
+  renderDetail();
+  document.getElementById("detail-backdrop").classList.add("open");
+}
+
+function closeDetail(){
+  document.getElementById("detail-backdrop").classList.remove("open");
+}
+
+function switchDetailTab(tab){
+  currentDetailTab = tab;
+  document.getElementById("tab-info").classList.toggle("active", tab === "info");
+  document.getElementById("tab-log").classList.toggle("active", tab === "log");
+  renderDetail();
+}
+
+function renderDetail(){
+  var r = bankRows.find(function(x){ return x.id === currentDetailRow; });
+  if(!r) return;
+  document.getElementById("detail-title").textContent = (r.type === "in" ? "Поступление" : "Выплата") + " · " + r.amount;
+  document.getElementById("detail-sub").textContent = r.company;
+
+  var body = document.getElementById("detail-body");
+  if(currentDetailTab === "info"){
+    var rows = [
+      ["Bank account", r.account],
+      ["Контрагент", r.counterparty],
+      ["Описание", r.desc],
+      ["Дата операции", r.opDate],
+      ["Договор", r.contract],
+      ["Дебет счёт", r.debit ? r.debit + " " + r.debitName : "—"],
+      ["Кредит счёт", r.credit ? r.credit + " " + r.creditName : "—"],
+      ["Статус", r.status === "posted" ? "posted" : "needs_review"],
+      ["Confidence", r.conf || "none"],
+      ["Источник", r.source2 === "ai" ? "AI" : (r.modifiedBy || "admin")]
+    ];
+    var html = "";
+    rows.forEach(function(pair){
+      html += '<div class="detail-row"><span class="detail-label">'+pair[0]+'</span><span class="detail-value">'+pair[1]+'</span></div>';
+    });
+    body.innerHTML = html;
+  } else {
+    var entries = (r.history || []).slice();
+    if(entries.length === 0){
+      var t = templates.find(function(x){ return x.code === r.note; });
+      entries.push({
+        by: "ИИ",
+        at: "—",
+        action: t ? "Шаблон определён автоматически: «"+t.name+"»" : "Не удалось определить шаблон автоматически",
+        ai: true
+      });
+    }
+    entries = entries.slice().reverse();
+    var html = "";
+    entries.forEach(function(e){
+      html += '<div class="log-item"><div class="log-dot'+(e.ai?" ai":"")+'"><i class="ti '+(e.ai?"ti-cpu":"ti-user-check")+'" style="font-size:14px"></i></div>';
+      html += '<div><div class="log-text">'+e.action+'</div><div class="log-meta">'+e.by+' · '+e.at+'</div></div></div>';
+    });
+    body.innerHTML = html;
+  }
+}
+
 function renderBankRows(){
   var html = "";
   bankRows.forEach(function(r){
@@ -560,8 +687,9 @@ function renderBankRows(){
     var statusBadge = r.status === "posted" ? badge("posted","var(--bg-success)","var(--text-success)") : badge("needs_review","var(--bg-danger)","var(--text-danger)");
     var confBadge = r.conf === "high" ? badge("high","var(--brand-tint)","var(--brand-text)") : r.conf === "low" ? badge("low","var(--bg-warning)","var(--text-warning)") : badge("none","var(--surface-1)","var(--text-muted)");
     var srcIcon = r.source2 === "ai" ? '<i class="ti ti-cpu" style="font-size:15px;color:var(--brand-text)" title="ai"></i>' : '<i class="ti ti-user" style="font-size:15px;color:var(--text-secondary)" title="'+(r.modifiedBy || "admin")+'"></i>';
+    var companyKey = r.company.indexOf("UDEVS") > -1 ? "UDEVS" : "HISOBIM";
 
-    html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+'">';
+    html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+';cursor:pointer" data-id="'+r.id+'" data-company="'+companyKey+'" data-status="'+r.status+'" data-conf="'+(r.conf||"none")+'" data-desc="'+r.desc.toLowerCase()+'" onclick="openDetail(\''+r.id+'\')">';
     html += '<td style="position:sticky;left:0;'+rowBg+'">'+r.company+'</td>';
     html += '<td style="position:sticky;left:170px;'+rowBg+';font-family:var(--font-mono);font-size:11.5px">'+r.account+'</td>';
     html += '<td style="text-align:right;font-family:var(--font-mono)">'+r.amount+'</td>';
@@ -581,6 +709,7 @@ function renderBankRows(){
     html += '</tr>';
   });
   document.getElementById("bank-rows").innerHTML = html;
+  applyFilters();
 }
 
 function applyTemplate(rowId, code){
@@ -588,6 +717,8 @@ function applyTemplate(rowId, code){
   var row = bankRows.find(function(x){ return x.id === rowId; });
   var debitAcct = accounts.find(function(a){ return a.code === String(t.debit); });
   var creditAcct = accounts.find(function(a){ return a.code === String(t.credit); });
+  var prevTemplate = templates.find(function(x){ return x.code === row.note; });
+  var fromLabel = prevTemplate ? prevTemplate.name : "не определён";
   row.debit = String(t.debit);
   row.debitName = debitAcct ? debitAcct.name : "";
   row.credit = String(t.credit);
@@ -599,6 +730,8 @@ function applyTemplate(rowId, code){
   row.note = t.code;
   row.modifiedBy = currentUser ? currentUser.name : "admin";
   row.modifiedAt = new Date().toLocaleString("ru-RU", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
+  row.history = row.history || [];
+  row.history.push({by: row.modifiedBy, at: row.modifiedAt, action: "Изменил шаблон: «"+fromLabel+"» → «"+t.name+"»"});
   openTplPicker = null;
   renderBankRows();
 }
@@ -606,9 +739,8 @@ function applyTemplate(rowId, code){
 function filterRows(mode, btn){
   document.querySelectorAll(".btn").forEach(function(b){ b.classList.remove("active"); });
   btn.classList.add("active");
-  document.querySelectorAll("#bank-rows tr").forEach(function(tr){
-    tr.style.display = (mode === "all" || tr.className.indexOf("row-review") > -1) ? "" : "none";
-  });
+  filters.mode = mode;
+  applyFilters();
 }
 
 function renderTplRows(){
@@ -641,9 +773,9 @@ function showScreen(name){
 
 renderBankRows();
 renderTplRows();
-buildCsel("csel-company", ["Компания: все","UDEVS","HISOBIM"], 150);
-buildCsel("csel-status", ["Статус: все","posted","needs_review"], 150);
-buildCsel("csel-conf", ["Confidence: все","high","low","none"], 150);
+buildCsel("csel-company", "company", [{label:"Компания: все",value:"all"},{label:"UDEVS",value:"UDEVS"},{label:"HISOBIM",value:"HISOBIM"}], 150);
+buildCsel("csel-status", "status", [{label:"Статус: все",value:"all"},{label:"posted",value:"posted"},{label:"needs_review",value:"needs_review"}], 150);
+buildCsel("csel-conf", "conf", [{label:"Confidence: все",value:"all"},{label:"high",value:"high"},{label:"low",value:"low"},{label:"none",value:"none"}], 150);
 </script>
 
 </body>
