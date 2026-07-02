@@ -132,7 +132,16 @@
   .log-dot{width:32px;height:32px;border-radius:50%;background:var(--brand-tint);color:var(--brand-text);display:flex;align-items:center;justify-content:center;flex-shrink:0}
   .log-dot.ai{background:var(--surface-1);color:var(--text-secondary)}
   .log-text{font-size:13.5px;font-weight:500}
-  .log-meta{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+  .log-meta{font-size:11.5px;color:var(--text-muted);margin-top:6px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+  .log-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;background:var(--surface-1);color:var(--text-secondary);font-size:11px}
+  .log-pill strong{font-weight:600;color:var(--text-primary)}
+  .log-action-btn{margin-left:auto;border:0.5px solid var(--border);background:var(--surface-2);color:var(--text-secondary);border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer}
+  .log-action-btn:hover{background:var(--brand-tint);color:var(--brand-text);border-color:transparent}
+  .admin-ops-item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:0.5px solid var(--border);cursor:pointer}
+  .admin-ops-item:last-child{border-bottom:none}
+  .admin-ops-item:hover .admin-ops-title{color:var(--brand-text)}
+  .admin-ops-title{font-size:13px;font-weight:600}
+  .admin-ops-meta{font-size:11.5px;color:var(--text-muted);margin-top:4px}
   .table-state{padding:28px;text-align:center;color:var(--text-muted);font-size:13px}
   .table-state.error{color:var(--text-danger)}
 </style>
@@ -163,11 +172,11 @@
         <p>Войдите, чтобы продолжить работу с банковскими операциями</p>
       </div>
       <div id="login-error" class="login-error">
-        <i class="ti ti-alert-triangle" style="font-size:13px"></i>Введите email и пароль
+        <i class="ti ti-alert-triangle" style="font-size:13px"></i><span id="login-error-text">Введите логин и пароль</span>
       </div>
       <div class="login-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16a1 1 0 011 1v12a1 1 0 01-1 1H4a1 1 0 01-1-1V6a1 1 0 011-1z"/><path d="M3 6l9 7 9-7"/></svg>
-        <input type="text" id="login-email" placeholder="Email" />
+        <input type="text" id="login-username" placeholder="Username" />
       </div>
       <div class="login-field">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/></svg>
@@ -227,7 +236,7 @@
       </div>
 
       <div style="display:flex;gap:8px;margin-bottom:12px">
-        <button class="btn active" onclick="filterRows('all',this)">Все операции</button>
+        <button class="btn active" onclick="filterRows('all',this)">Все изменения</button>
         <button class="btn" onclick="filterRows('review',this)">
           <i class="ti ti-alert-triangle" style="font-size:14px"></i>Требует проверки
           <span id="review-badge-count" class="badge" style="background:var(--bg-danger);color:var(--text-danger)">0</span>
@@ -303,6 +312,20 @@
   </div>
 </div>
 
+<div id="admin-ops-backdrop" class="modal-backdrop" onclick="if(event.target===this)closeAdminUserOperations()">
+  <div class="modal-card" style="max-width:720px">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow" style="margin-bottom:8px">Администратор</div>
+        <div id="admin-ops-title" style="font-size:17px;font-weight:700"></div>
+        <div id="admin-ops-sub" style="font-size:12.5px;color:var(--text-muted);margin-top:3px"></div>
+      </div>
+      <svg class="modal-close" onclick="closeAdminUserOperations()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18"/><path d="M6 6l12 12"/></svg>
+    </div>
+    <div class="modal-body" id="admin-ops-body"></div>
+  </div>
+</div>
+
 <script>
 var templates = [];
 var bankRows = [];
@@ -336,6 +359,11 @@ var miniIcons = {
 
 var filters = {company:"all", status:"all", conf:"all", mode:"all", search:""};
 
+// Vaqtincha: login o'tkazib, to'g'ridan-to'g'ri operatsiyalar ekraniga kirish (test uchun).
+var DEV_SKIP_LOGIN = true;
+var DEV_API_KEY = "P-s1Hi1vbNXcC4q9GoIeeKL4fx9IPeo82U";
+var DEV_USER_ID = "5fcb6876-b359-4c98-b696-9ffd682e7c64";
+
 function getUrlParam(name){
   return new URLSearchParams(window.location.search).get(name) || "";
 }
@@ -348,7 +376,8 @@ function getApiConfig(){
     localFaasUrl: getUrlParam("faas_url") || (isLocal ? "http://127.0.0.1:8080" : ""),
     projectId: getUrlParam("project_id") || getUrlParam("project-id") || "b744d518-5f66-4818-bfd7-9f3f44ce3379",
     environmentId: getUrlParam("environment_id") || getUrlParam("environment-id") || "e5a9073c-15e6-4bf0-8530-89eb5b36ebb1",
-    apiKey: getUrlParam("api_key") || "",
+    apiKey: getUrlParam("api_key") || (DEV_SKIP_LOGIN ? DEV_API_KEY : ""),
+    devUserId: getUrlParam("user_id") || (DEV_SKIP_LOGIN ? DEV_USER_ID : ""),
     authToken: getUrlParam("token") || localStorage.getItem("admin_auth_token") || ""
   };
 }
@@ -396,6 +425,9 @@ async function invokeFunction(method, objectData){
     environment_id: cfg.environmentId,
     object_data: objectData || {}
   };
+  if(cfg.devUserId){
+    payload.user_id = cfg.devUserId;
+  }
   var headers = {"Content-Type": "application/json"};
   if(cfg.authToken){
     headers.Authorization = cfg.authToken.indexOf("Bearer ") === 0 ? cfg.authToken : "Bearer " + cfg.authToken;
@@ -477,8 +509,165 @@ function mapApiOperationToRow(op){
     templateGuid: op.template_guid || "",
     templateName: op.template_name || "",
     flagged: !!op.flagged,
-    history: []
+    confirmedByUserId: op.confirmed_by_user_id || "",
+    confirmedByName: op.confirmed_by_name || "",
+    confirmedByCount: Number(op.confirmed_by_count) || 0,
+    confirmedAt: op.confirmed_at || "",
+    history: mapConfirmHistory(op)
   };
+}
+
+function mapConfirmHistory(op){
+  var raw = Array.isArray(op.confirm_history) ? op.confirm_history : [];
+  if(raw.length){
+    return raw.map(function(item){
+      return {
+        by: item.confirmed_by_name || item.user_name || item.users_id || "",
+        at: item.confirmed_at || item.created_at || "",
+        userId: item.confirmed_by_user_id || item.users_id || "",
+        action: item.action_label || "Шаблон подтверждён пользователем",
+        ai: false,
+        count: Number(item.confirmed_by_count || item.count) || 0
+      };
+    });
+  }
+  return [];
+}
+
+function hasAdminConfirmMeta(row){
+  return !!(row && (row.confirmedByName || row.confirmedAt || Number(row.confirmedByCount) > 0));
+}
+
+function buildConfirmHistoryEntries(row){
+  if(row.history && row.history.length){
+    return row.history.slice();
+  }
+  var entries = [];
+  var t = findTemplateForRow(row);
+  var templateLabel = t ? t.name : (row.templateName || row.note || "");
+  if((row.sourceType || row.source2) === "admin" && hasAdminConfirmMeta(row)){
+    entries.push({
+      by: row.confirmedByName || "—",
+      at: row.confirmedAt || "—",
+      userId: row.confirmedByUserId || "",
+      action: templateLabel ? "Шаблон подтверждён пользователем: «"+templateLabel+"»" : "Шаблон подтверждён пользователем",
+      ai: false,
+      count: row.confirmedByCount || 0
+    });
+  } else {
+    entries.push({
+      by: "ИИ",
+      at: "—",
+      action: templateLabel ? "Шаблон определён автоматически: «"+templateLabel+"»" : "Не удалось определить шаблон автоматически",
+      ai: true,
+      count: 0
+    });
+  }
+  return entries;
+}
+
+function renderConfirmMetaHtml(entry){
+  if(!entry || entry.ai){
+    return '<div class="log-meta"><span class="log-pill">'+mi("cpu",12)+' Определено автоматически</span></div>';
+  }
+  var countLabel = Number(entry.count) > 0 ? "Подтверждений: "+escapeHtml(String(entry.count)) : "";
+  var btn = "";
+  if(entry.userId && Number(entry.count) > 0){
+    btn = '<button type="button" class="log-action-btn" onclick="openAdminUserOperations(\''+escapeAttr(entry.userId)+'\', \''+escapeAttr(entry.by || "")+'\')">Список операций</button>';
+  }
+  return '<div class="log-meta" style="width:100%">'+
+    '<span class="log-pill">'+mi("userCheck",12)+' <strong>'+escapeHtml(entry.by || "—")+'</strong></span>'+
+    (entry.at && entry.at !== "—" ? '<span class="log-pill">'+mi("clock",12)+' '+escapeHtml(entry.at)+'</span>' : '')+
+    (countLabel ? '<span class="log-pill">'+mi("hash",12)+' '+countLabel+'</span>' : '')+
+    btn+
+    '</div>';
+}
+
+var adminOpsState = {userId: "", userName: "", page: 1, loading: false, items: []};
+
+async function openAdminUserOperations(userId, userName){
+  if(!userId) return;
+  adminOpsState = {userId: userId, userName: userName || "", page: 1, loading: true, items: []};
+  document.getElementById("admin-ops-title").textContent = userName || "Администратор";
+  document.getElementById("admin-ops-sub").textContent = "Загрузка...";
+  document.getElementById("admin-ops-body").innerHTML = '<div class="table-state">Загрузка операций...</div>';
+  document.getElementById("admin-ops-backdrop").classList.add("open");
+  await loadAdminUserOperationsPage(false);
+}
+
+function closeAdminUserOperations(){
+  document.getElementById("admin-ops-backdrop").classList.remove("open");
+}
+
+async function loadAdminUserOperationsPage(append){
+  if(adminOpsState.loading && append) return;
+  adminOpsState.loading = true;
+  try {
+    var raw = await invokeFunction("admin_get_user_confirm_operations", {
+      users_id: adminOpsState.userId,
+      page: adminOpsState.page,
+      limit: 20
+    });
+    var data = unwrapInvokeResponse(raw);
+    if(!data || data.success === false) throw new Error((data && data.message) || "load failed");
+    var items = data.items || [];
+    var total = Number((data.pagination && data.pagination.total) || data.total || items.length) || 0;
+    if(append){
+      adminOpsState.items = adminOpsState.items.concat(items);
+    } else {
+      adminOpsState.items = items.slice();
+    }
+    document.getElementById("admin-ops-title").textContent = data.user_name || adminOpsState.userName || "Администратор";
+    document.getElementById("admin-ops-sub").textContent = "Подтверждённых операций: " + total;
+    renderAdminUserOperations(adminOpsState.items, total);
+  } catch(e){
+    document.getElementById("admin-ops-body").innerHTML = '<div class="table-state error">'+escapeHtml(e.message || String(e))+'</div>';
+  } finally {
+    adminOpsState.loading = false;
+  }
+}
+
+function renderAdminUserOperations(items, total){
+  if(!items.length){
+    document.getElementById("admin-ops-body").innerHTML = '<div class="table-state">Операции не найдены</div>';
+    return;
+  }
+  var html = "";
+  items.forEach(function(item){
+    var title = item.template_name || item.template_code || item.posting_note || "Операция";
+    var amount = item.amount != null ? formatMoneyAmount(item.amount) : "—";
+    var typeLabel = item.type === "in" ? "Поступление" : "Выплата";
+    html += '<div class="admin-ops-item" data-op-guid="'+escapeAttr(item.operation_guid)+'" onclick="openOperationFromAdminList(this.getAttribute(\'data-op-guid\'))">';
+    html += '<div style="flex:1;min-width:0">';
+    html += '<div class="admin-ops-title">'+escapeHtml(title)+'</div>';
+    html += '<div class="admin-ops-meta">'+escapeHtml(item.company_name || "—")+' · '+escapeHtml(typeLabel)+' · '+escapeHtml(amount)+'</div>';
+    html += '<div class="admin-ops-meta" style="margin-top:2px">'+escapeHtml(item.operation_date || "—")+' · '+escapeHtml(item.confirmed_at || "—")+'</div>';
+    if(item.description){
+      html += '<div class="admin-ops-meta" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeHtml(item.description)+'</div>';
+    }
+    html += '</div></div>';
+  });
+  if(total > items.length && adminOpsState.page * 20 < total){
+    html += '<div style="padding-top:12px;text-align:center"><button type="button" class="log-action-btn" onclick="loadMoreAdminUserOperations()">Показать ещё</button></div>';
+  }
+  document.getElementById("admin-ops-body").innerHTML = html;
+}
+
+async function loadMoreAdminUserOperations(){
+  adminOpsState.page += 1;
+  await loadAdminUserOperationsPage(true);
+}
+
+function openOperationFromAdminList(operationGuid){
+  if(!operationGuid) return;
+  closeAdminUserOperations();
+  var existing = bankRows.find(function(x){ return x.id === operationGuid; });
+  if(existing){
+    openDetail(operationGuid);
+    switchDetailTab("log");
+    return;
+  }
+  alert("Операция не в текущем списке. GUID: " + operationGuid + "\nИзмените фильтры или поиск, чтобы открыть её в таблице.");
 }
 
 function findTemplateForRow(row){
@@ -753,25 +942,49 @@ document.addEventListener("click", function(ev){
 
 var currentUser = null;
 
-function doLogin(){
-  var email = document.getElementById("login-email").value.trim();
+async function doLogin(){
+  var username = document.getElementById("login-username").value.trim();
   var pass = document.getElementById("login-password").value.trim();
-  if(!email || !pass){
+  var loginError = document.getElementById("login-error");
+  var loginErrorText = document.getElementById("login-error-text");
+  if(!username || !pass){
+    loginErrorText.textContent = "Введите логин и пароль";
     document.getElementById("login-error").style.display = "flex";
     return;
   }
-  var namePart = email.split("@")[0].replace(/[._]/g, " ");
-  var name = namePart.replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-  var initials = name.split(" ").map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase();
-  currentUser = {email: email, name: name, initials: initials};
-  document.getElementById("user-name").textContent = currentUser.name;
-  document.getElementById("user-avatar").textContent = currentUser.initials;
-  document.getElementById("screen-login").style.display = "none";
-  document.getElementById("screen-app").style.display = "flex";
-  loadBankOperationsScreen();
+  try{
+    loginError.style.display = "none";
+    var raw = await invokeFunction("admin_login", {login: username, password: pass});
+    var data = unwrapInvokeResponse(raw) || {};
+    if(data.success === false || !data.token || !data.token.access_token){
+      throw new Error(data.message || "Неверный логин или пароль");
+    }
+
+    localStorage.setItem("admin_auth_token", String(data.token.access_token || ""));
+    localStorage.setItem("admin_refresh_token", String(data.token.refresh_token || ""));
+
+    var user = data.user || {};
+    var displayName = (user.first_name || user.last_name)
+      ? ((user.first_name || "") + " " + (user.last_name || "")).trim()
+      : username;
+    var initials = displayName.split(" ").filter(Boolean).map(function(w){ return w[0]; }).join("").slice(0,2).toUpperCase() || "AD";
+    currentUser = {login: username, name: displayName, initials: initials, role: data.role || ""};
+    document.getElementById("user-name").textContent = currentUser.name;
+    document.getElementById("user-avatar").textContent = currentUser.initials;
+    document.getElementById("screen-login").style.display = "none";
+    document.getElementById("screen-app").style.display = "flex";
+    loadBankOperationsScreen();
+  } catch(err){
+    loginErrorText.textContent = err && err.message ? err.message : "Ошибка авторизации";
+    loginError.style.display = "flex";
+  }
 }
 
 function doLogout(){
+  if(DEV_SKIP_LOGIN){
+    loadBankOperationsScreen({append: false});
+    return;
+  }
   currentUser = null;
   bankRows = [];
   templates = [];
@@ -781,7 +994,9 @@ function doLogout(){
     scrollObserver.disconnect();
     scrollObserver = null;
   }
-  document.getElementById("login-email").value = "";
+  localStorage.removeItem("admin_auth_token");
+  localStorage.removeItem("admin_refresh_token");
+  document.getElementById("login-username").value = "";
   document.getElementById("login-password").value = "";
   document.getElementById("login-error").style.display = "none";
   document.getElementById("screen-app").style.display = "none";
@@ -884,8 +1099,11 @@ function bindBankTableEvents(){
 }
 
 function auditNote(row){
-  if(!row.modifiedBy) return "";
-  return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:3px"><i class="ti ti-user-check" style="font-size:11px"></i>'+escapeHtml(row.modifiedBy)+' · '+escapeHtml(row.modifiedAt)+'</div>';
+  if(!hasAdminConfirmMeta(row)) return "";
+  var parts = [escapeHtml(row.confirmedByName || "—")];
+  if(row.confirmedAt) parts.push(escapeHtml(row.confirmedAt));
+  if(Number(row.confirmedByCount) > 0) parts.push("×"+escapeHtml(String(row.confirmedByCount)));
+  return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:4px;flex-wrap:wrap"><i class="ti ti-user-check" style="font-size:11px"></i>'+parts.join(' · ')+'</div>';
 }
 
 var currentDetailRow = null;
@@ -931,27 +1149,22 @@ function renderDetail(){
       ["gauge", "Confidence", r.conf || "none"],
       ["cpu", "Источник", (r.sourceType || r.source2) === "ai" ? "AI" : "admin"]
     ];
+    if(hasAdminConfirmMeta(r)){
+      rows.push(["userCheck", "Подтвердил", r.confirmedByName || "—"]);
+      rows.push(["clock", "Время подтверждения", r.confirmedAt || "—"]);
+      rows.push(["hash", "Всего подтверждений", String(r.confirmedByCount || 0)]);
+    }
     var html = "";
     rows.forEach(function(row){
       html += '<div class="detail-row"><span class="detail-label">'+mi(row[0])+escapeHtml(row[1])+'</span><span class="detail-value">'+escapeHtml(row[2])+'</span></div>';
     });
     body.innerHTML = html;
   } else {
-    var entries = (r.history || []).slice();
-    if(entries.length === 0){
-      var t = findTemplateForRow(r);
-      entries.push({
-        by: "ИИ",
-        at: "—",
-        action: t ? "Шаблон определён автоматически: «"+t.name+"»" : "Не удалось определить шаблон автоматически",
-        ai: true
-      });
-    }
-    entries = entries.slice().reverse();
+    var entries = buildConfirmHistoryEntries(r).slice().reverse();
     var html = "";
     entries.forEach(function(e){
       html += '<div class="log-item"><div class="log-dot'+(e.ai?" ai":"")+'">'+mi(e.ai?"cpu":"userCheck",16)+'</div>';
-      html += '<div><div class="log-text">'+escapeHtml(e.action)+'</div><div class="log-meta">'+(e.ai ? "Определено автоматически" : "Изменено пользователем")+': <strong style="color:var(--text-secondary)">'+escapeHtml(e.by)+'</strong> · '+escapeHtml(e.at)+'</div></div></div>';
+      html += '<div><div class="log-text">'+escapeHtml(e.action)+'</div>'+renderConfirmMetaHtml(e)+'</div></div>';
     });
     body.innerHTML = html;
   }
@@ -968,7 +1181,7 @@ function postingSourceBadge(sourceType){
 function renderBankRows(){
   var tbody = document.getElementById("bank-rows");
   if(!bankRows.length && !screenLoading){
-    tbody.innerHTML = '<tr><td colspan="15" class="table-state">Операции не найдены</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="15" class="table-state">Изменения не найдены</td></tr>';
     return;
   }
   var html = "";
@@ -1002,7 +1215,7 @@ function renderBankRows(){
   } else if(pagination.hasMore){
     html += '<tr id="bank-scroll-sentinel"><td colspan="15" class="table-state" style="padding:16px;color:var(--text-muted);font-size:12px">Прокрутите вниз для загрузки · '+escapeHtml(String(bankRows.length))+' / '+escapeHtml(String(pagination.total))+'</td></tr>';
   } else if(pagination.total > pagination.limit){
-    html += '<tr><td colspan="15" class="table-state" style="padding:16px;font-size:12px">Все операции загружены ('+escapeHtml(String(bankRows.length))+')</td></tr>';
+    html += '<tr><td colspan="15" class="table-state" style="padding:16px;font-size:12px">Все изменения загружены ('+escapeHtml(String(bankRows.length))+')</td></tr>';
   }
   tbody.innerHTML = html;
   bindBankTableEvents();
@@ -1080,13 +1293,26 @@ function showScreen(name){
   document.getElementById("screen-sub").textContent = name === "bank" ? "Импорт из банка и сопоставление с проводками" : "Справочник шаблонов бухгалтерских проводок";
 }
 
+function bootAppWithoutLogin(){
+  currentUser = {login: "Accountant_admin_1", name: "Accountant Admin", initials: "AA", role: "accountant_admin"};
+  document.getElementById("user-name").textContent = currentUser.name;
+  document.getElementById("user-avatar").textContent = currentUser.initials;
+  document.getElementById("screen-login").style.display = "none";
+  document.getElementById("screen-app").style.display = "flex";
+  loadBankOperationsScreen();
+}
+
 buildCsel("csel-status", "status", [{label:"Статус: все",value:"all"},{label:"posted",value:"posted"},{label:"needs_review",value:"needs_review"}], 150);
 buildCsel("csel-conf", "conf", [{label:"Confidence: все",value:"all"},{label:"high",value:"high"},{label:"low",value:"low"},{label:"none",value:"none"}], 150);
 buildCsel("csel-company", "company", [{label:"Компания: все",value:"all"}], 180);
 buildCsel("csel-header-company", "company", [{label:"Компания: все",value:"all"}], 240);
 document.getElementById("app-main").addEventListener("scroll", onAppMainScroll, {passive: true});
-document.getElementById("bank-rows").innerHTML = '<tr><td colspan="15" class="table-state">Войдите, чтобы загрузить операции</td></tr>';
-document.getElementById("tpl-rows").innerHTML = '<tr><td colspan="9" class="table-state">Войдите, чтобы загрузить шаблоны</td></tr>';
+if(DEV_SKIP_LOGIN){
+  bootAppWithoutLogin();
+} else {
+  document.getElementById("bank-rows").innerHTML = '<tr><td colspan="15" class="table-state">Войдите, чтобы загрузить операции</td></tr>';
+  document.getElementById("tpl-rows").innerHTML = '<tr><td colspan="9" class="table-state">Войдите, чтобы загрузить шаблоны</td></tr>';
+}
 </script>
 
 </body>
