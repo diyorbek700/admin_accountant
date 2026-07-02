@@ -37,6 +37,7 @@
   select:focus,input:focus{outline:2px solid var(--brand);outline-offset:-1px}
   button{font-family:inherit}
   .app-shell{width:100%;min-height:100vh;margin:0;display:flex;background:var(--surface-2)}
+  .app-main{flex:1;min-width:0;padding:16px 18px;max-height:100vh;overflow-y:auto;overflow-x:hidden}
   .sidebar{width:216px;flex-shrink:0;border-right:0.5px solid var(--border);background:var(--surface-1);padding:16px 10px;display:flex;flex-direction:column;gap:4px}
   .navitem{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:10px;font-size:13.5px;cursor:pointer;color:var(--text-secondary);border-left:3px solid transparent;transition:background .15s,color .15s}
   .navitem:hover{background:var(--brand-tint);color:var(--brand-text)}
@@ -59,6 +60,10 @@
   .acct-chip:hover{border-color:var(--brand);background:var(--brand-tint)}
   .acct-chip.open{border:1px solid var(--brand);background:var(--brand-tint)}
   .acct-chip .chip-label{flex:1;font-size:11.5px}
+  .acct-chip.loading{opacity:.65;pointer-events:none}
+  .acct-chip.loading .chip-label::after{content:"";display:inline-block;width:12px;height:12px;margin-left:6px;border:2px solid var(--border-strong);border-top-color:var(--brand);border-radius:50%;animation:spin .7s linear infinite;vertical-align:-2px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .tpl-opt.disabled{opacity:.5;pointer-events:none}
   .login-shell{width:100%;min-height:100vh;display:flex;background:var(--surface-0)}
   .login-left{flex:1.15;position:relative;overflow:hidden;background:linear-gradient(135deg,var(--brand) 0%,#003a42 100%);color:#fff;display:flex;flex-direction:column;justify-content:center;padding:64px}
   .login-left::before{content:"";position:absolute;width:440px;height:440px;border-radius:50%;background:rgba(255,255,255,.06);top:-140px;right:-140px}
@@ -128,6 +133,8 @@
   .log-dot.ai{background:var(--surface-1);color:var(--text-secondary)}
   .log-text{font-size:13.5px;font-weight:500}
   .log-meta{font-size:11.5px;color:var(--text-muted);margin-top:3px}
+  .table-state{padding:28px;text-align:center;color:var(--text-muted);font-size:13px}
+  .table-state.error{color:var(--text-danger)}
 </style>
 </head>
 <body>
@@ -145,7 +152,7 @@
     <div class="login-stat-row">
       <div class="login-stat"><div class="num">1 244 M</div><div class="lbl">Поступления / мес</div></div>
       <div class="login-stat"><div class="num">98.6%</div><div class="lbl">Автосопоставление</div></div>
-      <div class="login-stat"><div class="num">2</div><div class="lbl">Ждут проверки</div></div>
+      <div class="login-stat"><div class="num" id="login-stat-review">0</div><div class="lbl">Ждут проверки</div></div>
     </div>
   </div>
   <div class="login-right">
@@ -196,7 +203,7 @@
     </div>
   </div>
 
-  <div style="flex:1;min-width:0;padding:16px 18px">
+  <div id="app-main" class="app-main">
 
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
@@ -204,16 +211,7 @@
         <div style="font-size:16px" id="screen-title">Банковские операции</div>
         <div style="font-size:12.5px;color:var(--text-muted)" id="screen-sub">Импорт из банка и сопоставление с проводками</div>
       </div>
-      <div class="csel" style="min-width:240px">
-        <div class="csel-trigger" style="width:240px" onclick="toggleCsel(this.parentElement,event)">
-          <span class="csel-label">UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT</span>
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-        <div class="csel-menu">
-          <div class="csel-opt selected" onclick="selectCsel(event,this,null,null,'UDEVS MAS\'ULIYATI CHEKLANGAN JAMIYAT')">UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
-          <div class="csel-opt" onclick="selectCsel(event,this,null,null,'HISOBIM MAS\'ULIYATI CHEKLANGAN JAMIYAT')">HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg></div>
-        </div>
-      </div>
+      <div id="csel-header-company" class="csel" style="min-width:240px"></div>
     </div>
 
     <div id="screen-bank">
@@ -224,7 +222,7 @@
         <div id="csel-conf" class="csel"></div>
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-          <input type="text" placeholder="Поиск по описанию" oninput="filters.search=this.value.toLowerCase();applyFilters()" />
+          <input type="text" id="search-input" placeholder="Поиск по описанию" oninput="onSearchInput(this.value)" />
         </div>
       </div>
 
@@ -232,11 +230,11 @@
         <button class="btn active" onclick="filterRows('all',this)">Все операции</button>
         <button class="btn" onclick="filterRows('review',this)">
           <i class="ti ti-alert-triangle" style="font-size:14px"></i>Требует проверки
-          <span class="badge" style="background:var(--bg-danger);color:var(--text-danger)">2</span>
+          <span id="review-badge-count" class="badge" style="background:var(--bg-danger);color:var(--text-danger)">0</span>
         </button>
       </div>
 
-      <div class="table-wrap">
+      <div id="bank-table-wrap" class="table-wrap">
         <table style="min-width:1750px">
           <thead>
             <tr>
@@ -252,7 +250,6 @@
               <th style="min-width:95px">Дата операции</th>
               <th style="min-width:90px">Договор</th>
               <th style="min-width:105px">Статус</th>
-              <th style="min-width:70px">Source</th>
               <th style="min-width:80px">Confidence</th>
               <th style="min-width:130px">Posting note</th>
               <th style="min-width:170px">Шаблон</th>
@@ -307,41 +304,18 @@
 </div>
 
 <script>
-var templates = [
-  {code:"BANK_IN_SALES", name:"Поступлении от продаж", debit:5110, credit:6310, direction:"income"},
-  {code:"BANK_OUT_SUPPLIER", name:"Оплата поставщику", debit:6010, credit:5110, direction:"expense"},
-  {code:"BANK_OUT_OTHER_EXPENSE", name:"Прочие расходы", debit:9430, credit:5110, direction:"expense"},
-  {code:"BANK_IN_DEBT_PAYMENT", name:"Погашение задолженности клиента", debit:5110, credit:4010, direction:"income"},
-  {code:"BANK_OUT_SALARY", name:"За зарплату", debit:6710, credit:5110, direction:"expense"},
-  {code:"BANK_OUT_RENT", name:"За аренду", debit:4310, credit:5110, direction:"expense"},
-  {code:"BANK_IN_OTHER_INCOME", name:"Прочие поступления", debit:5110, credit:9010, direction:"income"},
-  {code:"BANK_OUT_CONVERSION", name:"За конвертацию", debit:5530, credit:5110, direction:"expense"}
-];
-
-var accounts = [
-  {code:"5110", name:"Hisob-kitob hisobvarag'i"},
-  {code:"5530", name:"Valyuta hisob-kitob hisobvarag'i"},
-  {code:"6010", name:"Mol yetkazib beruvchilarga va pudratchilarga to'lovlar"},
-  {code:"6310", name:"Xaridorlar va buyurtmachilardan olingan bo'naklar — joriy qismi"},
-  {code:"6710", name:"Ish haqi bo'yicha xodimlar bilan hisob-kitoblar"},
-  {code:"4010", name:"Xaridorlar va buyurtmachilar bilan hisob-kitoblar"},
-  {code:"4310", name:"Ijara bo'yicha hisob-kitoblar"},
-  {code:"9010", name:"Asosiy faoliyatdan boshqa daromadlar"},
-  {code:"9430", name:"Boshqa operatsion xarajatlar"}
-];
-
-var bankRows = [
-  {id:"row-1", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"508 200 000", type:"in", source:"bank", counterparty:'"UNIVERSITY OF BUSINESS AND SCIENCE" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011100111 предоплата по Договору о...", debit:"5110", debitName:"Hisob-kitob hisobvarag'i", credit:"6310", creditName:"Xaridorlar va buyurtmachilardan olingan bo'naklar", opDate:"30.06.2026", contract:"22.06.2026", status:"posted", source2:"ai", conf:"high", note:"BANK_IN_SALES"},
-  {id:"row-2", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"10 000 000", type:"out", source:"bank", counterparty:'"CHET EL KAPITALI ISHTIROKIDAGI HAMKORBANK" AKSIYADORLIK TIJORAT BANKI', desc:"00111 16.02.2026dagi №СЛ 114 sonli s...", debit:"6010", debitName:"Mol yetkazib beruvchilarga to'lovlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"07.01.2026", contract:"16.02.2026 · СЛ 114", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SUPPLIER"},
-  {id:"row-flag-1", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"400 000", type:"in", source:"bank", counterparty:'"LA VITA BOTTLERS" MAS\'ULIYATI CHEKLANGAN JAMIYAT', desc:"0011000111 договору № 692 от 16.07.2...", debit:"", debitName:"", credit:"", creditName:"", opDate:"18.06.2026", contract:"16.07.2024 · 692", status:"needs_review", source2:"ai", conf:"none", note:"UNSURE | none", flagged:true},
-  {id:"row-flag-2", company:"HISOBIM MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"manual", amount:"9 000 002", type:"out", source:"manual", counterparty:"OSTONOV ALIBEK ALISHER O'G'LI", desc:"00111 ВС 03.06.2026 погашение Деб...", debit:"", debitName:"", credit:"", creditName:"", opDate:"30.06.2026", contract:"—", status:"needs_review", source2:"ai", conf:"low", note:"BANK_IN_DEBT_PAYMENT", flagged:true},
-  {id:"row-5", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"23106000705191969001", amount:"9 958 333", type:"out", source:"bank", counterparty:"IBROHIMOV SHOHZOD SOHIBJON O'G'LI", desc:"006343 зачисление на счет пласт. карты", debit:"6710", debitName:"Ish haqi bo'yicha xodimlar bilan hisob-kitoblar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"06.05.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_SALARY"},
-  {id:"row-6", company:"UDEVS MAS'ULIYATI CHEKLANGAN JAMIYAT", account:"20208000505191969001", amount:"2 000", type:"out", source:"bank", counterparty:"—", desc:"00111 ВС 23.06.2026 погашение за п...", debit:"9430", debitName:"Boshqa operatsion xarajatlar", credit:"5110", creditName:"Hisob-kitob hisobvarag'i", opDate:"23.06.2026", contract:"—", status:"posted", source2:"ai", conf:"high", note:"BANK_OUT_BANK_FEE"}
-];
-
-function badge(text, bg, fg){
-  return '<span class="badge" style="background:'+bg+';color:'+fg+'">'+text+'</span>';
-}
+var templates = [];
+var bankRows = [];
+var companies = [];
+var screenLoading = false;
+var loadingMore = false;
+var searchDebounceTimer = null;
+var searchMinLength = 2;
+var searchDebounceMs = 700;
+var pagination = {page: 1, limit: 50, total: 0, hasMore: false};
+var scrollObserver = null;
+var applyingTemplateRowId = null;
+var templatesLoading = false;
 
 var checkSvg = '<svg class="csel-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>';
 var chevronSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>';
@@ -360,21 +334,392 @@ var miniIcons = {
   userCheck: '<circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5"/><path d="M16 11l2 2 4-4"/>'
 };
 
+var filters = {company:"all", status:"all", conf:"all", mode:"all", search:""};
+
+function getUrlParam(name){
+  return new URLSearchParams(window.location.search).get(name) || "";
+}
+
+function getApiConfig(){
+  var isLocal = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1";
+  return {
+    host: getUrlParam("api_host") || "https://api.admin.u-code.io",
+    functionSlug: getUrlParam("function_slug") || "hisobim-core-service",
+    localFaasUrl: getUrlParam("faas_url") || (isLocal ? "http://127.0.0.1:8080" : ""),
+    projectId: getUrlParam("project_id") || getUrlParam("project-id") || "b744d518-5f66-4818-bfd7-9f3f44ce3379",
+    environmentId: getUrlParam("environment_id") || getUrlParam("environment-id") || "e5a9073c-15e6-4bf0-8530-89eb5b36ebb1",
+    apiKey: getUrlParam("api_key") || "",
+    authToken: getUrlParam("token") || localStorage.getItem("admin_auth_token") || ""
+  };
+}
+
+function unwrapInvokeResponse(payload){
+  if(!payload || typeof payload !== "object") return null;
+  if(payload.status === "error"){
+    var errBody = payload.data || payload;
+    var msg = (errBody && (errBody.message || errBody.error)) || "API error";
+    return {success: false, message: msg};
+  }
+  var cur = payload;
+  for(var i = 0; i < 5; i++){
+    if(!cur || typeof cur !== "object") break;
+    if(cur.success === true || cur.success === false) return cur;
+    if(cur.operations || cur.templates || cur.companies || cur.pagination || cur.summary) return cur;
+    if(cur.data && typeof cur.data === "object"){
+      cur = cur.data;
+      continue;
+    }
+    break;
+  }
+  return cur;
+}
+
+function updatePaginationAfterLoad(newRowsCount, data){
+  var pg = (data && data.pagination) || {};
+  var total = Number(pg.total);
+  if(!isNaN(total) && total > 0){
+    pagination.total = total;
+    pagination.hasMore = bankRows.length < pagination.total;
+  } else {
+    pagination.hasMore = newRowsCount >= pagination.limit;
+    if(!pagination.hasMore && pagination.total === 0){
+      pagination.total = bankRows.length;
+    }
+  }
+}
+
+async function invokeFunction(method, objectData){
+  var cfg = getApiConfig();
+  var payload = {
+    method: method,
+    project_id: cfg.projectId,
+    environment_id: cfg.environmentId,
+    object_data: objectData || {}
+  };
+  var headers = {"Content-Type": "application/json"};
+  if(cfg.authToken){
+    headers.Authorization = cfg.authToken.indexOf("Bearer ") === 0 ? cfg.authToken : "Bearer " + cfg.authToken;
+  } else if(cfg.apiKey){
+    headers.Authorization = "API-KEY";
+    headers["X-API-KEY"] = cfg.apiKey;
+  }
+  var url, body;
+  if(cfg.localFaasUrl){
+    url = cfg.localFaasUrl.replace(/\/$/, "") + "/";
+    body = {data: payload};
+  } else {
+    url = cfg.host.replace(/\/$/, "") + "/v2/invoke_function/" + cfg.functionSlug + "?project-id=" + encodeURIComponent(cfg.projectId);
+    body = {data: payload};
+  }
+  var res = await fetch(url, {method: "POST", headers: headers, body: JSON.stringify(body)});
+  if(!res.ok) throw new Error("HTTP " + res.status);
+  return res.json();
+}
+
+function escapeHtml(s){
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function escapeAttr(s){
+  return escapeHtml(s).replace(/'/g, "&#39;");
+}
+
+function formatMoneyAmount(n){
+  var v = Math.round(Number(n) || 0);
+  return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+}
+
+var templatesLoadPromise = null;
+
+function mapApiTemplates(list){
+  return (list || []).map(function(t){
+    return {
+      guid: t.guid || "",
+      code: t.code || "",
+      name: t.name || t.name_uz || t.code || "—",
+      debit: t.debit || t.debit_account_code || "",
+      credit: t.credit || t.credit_account_code || "",
+      direction: t.direction || "",
+      source: t.source || "bank"
+    };
+  }).filter(function(t){ return t.guid; });
+}
+
+function mapApiOperationToRow(op){
+  return {
+    id: op.guid,
+    companyId: op.company_id,
+    company: op.company_name || "—",
+    account: op.bank_account || "—",
+    amount: formatMoneyAmount(op.amount),
+    rawAmount: Number(op.amount) || 0,
+    rawDirection: op.direction || (op.type === "in" ? "income" : "expense"),
+    type: op.type || (op.direction === "income" ? "in" : "out"),
+    source: op.source || "bank",
+    sourceType: op.source_type || op.posting_source || "",
+    counterparty: op.counterparty_name || "—",
+    desc: op.description || "",
+    debit: op.debit_code || "",
+    debitName: op.debit_name || "",
+    credit: op.credit_code || "",
+    creditName: op.credit_name || "",
+    opDate: op.operation_date || "",
+    contract: op.contract || "—",
+    status: op.posting_status || "",
+    source2: op.posting_source || "",
+    conf: op.posting_confidence || "none",
+    note: op.posting_note || op.template_code || "",
+    templateCode: op.template_code || "",
+    templateGuid: op.template_guid || "",
+    templateName: op.template_name || "",
+    flagged: !!op.flagged,
+    history: []
+  };
+}
+
+function findTemplateForRow(row){
+  if(!row) return null;
+  return templates.find(function(x){
+    return x.guid === row.templateGuid || x.code === row.templateCode || x.code === row.note;
+  }) || null;
+}
+
+function templateDisplayName(row){
+  if(!row) return "";
+  if(row.templateName) return row.templateName;
+  var t = findTemplateForRow(row);
+  if(t && t.name) return t.name;
+  return row.templateCode || row.note || "";
+}
+
+function templatesForPicker(row){
+  if(!templates.length) return [];
+  var dir = row && row.type === "in" ? "income" : "expense";
+  return templates.slice().sort(function(a, b){
+    var aRank = a.direction === dir ? 0 : 1;
+    var bRank = b.direction === dir ? 0 : 1;
+    if(aRank !== bRank) return aRank - bRank;
+    return String(a.name || "").localeCompare(String(b.name || ""), "ru");
+  });
+}
+
+async function loadTemplatesForPicker(force){
+  if(!force && templates.length > 0) return true;
+  if(templatesLoadPromise) return templatesLoadPromise;
+
+  templatesLoading = true;
+  templatesLoadPromise = (async function(){
+    try {
+      var raw = await invokeFunction("list_accounting_templates", {});
+      var data = unwrapInvokeResponse(raw);
+      if(!data || data.success === false) throw new Error((data && data.message) || "templates load failed");
+      templates = mapApiTemplates(data.templates);
+      renderTplRows();
+      return templates.length > 0;
+    } catch(e){
+      console.error("list_accounting_templates", e);
+      return false;
+    } finally {
+      templatesLoading = false;
+      templatesLoadPromise = null;
+    }
+  })();
+
+  return templatesLoadPromise;
+}
+
+async function ensureTemplatesLoaded(){
+  return loadTemplatesForPicker(false);
+}
+
+function buildScreenApiParams(page){
+  var params = {page: page || 1, limit: pagination.limit};
+  if(filters.company && filters.company !== "all") params.company_id = filters.company;
+  if(filters.mode === "review") params.posting_status = "needs_review";
+  else if(filters.status && filters.status !== "all") params.posting_status = filters.status;
+  if(filters.conf && filters.conf !== "all") params.posting_confidence = filters.conf;
+  if(filters.search) params.search = filters.search;
+  return params;
+}
+
+function updateSummaryUI(summary){
+  summary = summary || {};
+  var review = summary.needs_review_count || 0;
+  var badge = document.getElementById("review-badge-count");
+  if(badge) badge.textContent = String(review);
+  var statReview = document.getElementById("login-stat-review");
+  if(statReview) statReview.textContent = String(review);
+}
+
+function setBankTableLoading(loading){
+  if(loading){
+    document.getElementById("bank-rows").innerHTML = '<tr><td colspan="15" class="table-state"><i class="ti ti-loader" style="margin-right:6px"></i>Загрузка операций...</td></tr>';
+  }
+}
+
+function showBankTableError(message){
+  document.getElementById("bank-rows").innerHTML = '<tr><td colspan="15" class="table-state error">'+escapeHtml(message)+'</td></tr>';
+}
+
+async function loadBankOperationsScreen(options){
+  options = options || {};
+  var append = !!options.append;
+  if((screenLoading && !append) || (loadingMore && append)) return;
+  if(append && !pagination.hasMore) return;
+
+  var nextPage = append ? pagination.page + 1 : 1;
+  if(append){
+    loadingMore = true;
+    renderBankRows();
+  } else {
+    screenLoading = true;
+    pagination.page = 1;
+    pagination.total = 0;
+    pagination.hasMore = false;
+    setBankTableLoading(true);
+  }
+
+  try {
+    var raw = await invokeFunction("admin_get_bank_operations_screen", buildScreenApiParams(nextPage));
+    var data = unwrapInvokeResponse(raw);
+    if(!data || data.success === false) throw new Error((data && data.message) || "API javob xato");
+
+    var newRows = (data.operations || []).map(mapApiOperationToRow);
+    if(append){
+      bankRows = bankRows.concat(newRows);
+      pagination.page = nextPage;
+    } else {
+      companies = data.companies || [];
+      bankRows = newRows;
+      pagination.page = 1;
+      updateSummaryUI(data.summary);
+      rebuildCompanyFilters();
+      if(data.templates && data.templates.length){
+        templates = mapApiTemplates(data.templates);
+        renderTplRows();
+      } else {
+        await ensureTemplatesLoaded();
+      }
+    }
+
+    updatePaginationAfterLoad(newRows.length, data);
+    renderBankRows();
+    setupInfiniteScroll();
+  } catch(e){
+    console.error(e);
+    if(!append) showBankTableError(e.message || String(e));
+  } finally {
+    screenLoading = false;
+    loadingMore = false;
+    if(append) renderBankRows();
+  }
+}
+
+function reloadBankOperationsDebounced(){
+  clearTimeout(searchDebounceTimer);
+  searchDebounceTimer = setTimeout(function(){ loadBankOperationsScreen({append: false}); }, searchDebounceMs);
+}
+
+function setupInfiniteScroll(){
+  if(scrollObserver){
+    scrollObserver.disconnect();
+    scrollObserver = null;
+  }
+  var sentinel = document.getElementById("bank-scroll-sentinel");
+  var root = document.getElementById("app-main");
+  if(!sentinel || !pagination.hasMore) return;
+  scrollObserver = new IntersectionObserver(function(entries){
+    if(!entries[0].isIntersecting) return;
+    if(!pagination.hasMore || screenLoading || loadingMore) return;
+    loadBankOperationsScreen({append: true});
+  }, {root: root || null, rootMargin: "120px 0px", threshold: 0});
+  scrollObserver.observe(sentinel);
+}
+
+function onAppMainScroll(){
+  if(!pagination.hasMore || screenLoading || loadingMore) return;
+  var root = document.getElementById("app-main");
+  if(!root) return;
+  var nearBottom = root.scrollTop + root.clientHeight >= root.scrollHeight - 160;
+  if(nearBottom) loadBankOperationsScreen({append: true});
+}
+
+function onSearchInput(value){
+  var q = String(value || "").trim();
+  filters.search = q.length >= searchMinLength ? q : "";
+  reloadBankOperationsDebounced();
+}
+
+function companyOptions(){
+  var opts = [{label: "Компания: все", value: "all"}];
+  companies.forEach(function(c){
+    var name = c.legal_name || c.short_name || c.guid;
+    opts.push({label: name, value: c.guid});
+  });
+  return opts;
+}
+
+function rebuildCompanyFilters(){
+  var opts = companyOptions();
+  buildCsel("csel-company", "company", opts, 180);
+  buildCsel("csel-header-company", "company", opts, 240);
+}
+
+function badge(text, bg, fg){
+  return '<span class="badge" style="background:'+bg+';color:'+fg+'">'+escapeHtml(text)+'</span>';
+}
+
 function mi(name, size){
   return '<svg viewBox="0 0 24 24" width="'+(size||14)+'" height="'+(size||14)+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;flex-shrink:0">'+miniIcons[name]+'</svg>';
 }
 
-var filters = {company:"all", status:"all", conf:"all", mode:"all", search:""};
-
 function buildCsel(containerId, field, options, width){
-  var html = '<div class="csel-trigger" style="width:'+width+'px" onclick="toggleCsel(this.parentElement,event)">';
-  html += '<span class="csel-label">'+options[0].label+'</span>'+chevronSvg+'</div>';
+  var el = document.getElementById(containerId);
+  if(!el) return;
+  var current = field ? filters[field] : null;
+  var selectedIdx = 0;
+  options.forEach(function(opt, i){ if(field && opt.value === current) selectedIdx = i; });
+  var html = '<div class="csel-trigger" style="width:'+width+'px">';
+  html += '<span class="csel-label">'+escapeHtml(options[selectedIdx].label)+'</span>'+chevronSvg+'</div>';
   html += '<div class="csel-menu">';
   options.forEach(function(opt, i){
-    html += '<div class="csel-opt'+(i===0?" selected":"")+'" onclick="selectCsel(event,this,\''+field+'\',\''+opt.value+'\',\''+opt.label.replace(/'/g,"\\'")+'\')">'+opt.label+checkSvg+'</div>';
+    html += '<div class="csel-opt'+(i===selectedIdx?" selected":"")+'" data-value="'+escapeAttr(opt.value)+'" data-label="'+escapeAttr(opt.label)+'">'+escapeHtml(opt.label)+checkSvg+'</div>';
   });
   html += '</div>';
-  document.getElementById(containerId).innerHTML = html;
+  el.innerHTML = html;
+  el.setAttribute("data-field", field || "");
+  bindCselEvents(el);
+}
+
+function bindCselEvents(el){
+  if(el.getAttribute("data-bound") === "1") return;
+  el.setAttribute("data-bound", "1");
+  el.addEventListener("click", function(ev){
+    var field = el.getAttribute("data-field") || "";
+    if(ev.target.closest(".csel-trigger")){
+      toggleCsel(el, ev);
+      return;
+    }
+    var opt = ev.target.closest(".csel-opt");
+    if(!opt) return;
+    selectCsel(ev, opt, field, opt.getAttribute("data-value") || "", opt.getAttribute("data-label") || "");
+  });
+}
+
+function syncCompanyDropdowns(label){
+  ["csel-company", "csel-header-company"].forEach(function(id){
+    var wrap = document.getElementById(id);
+    if(!wrap) return;
+    var labelEl = wrap.querySelector(".csel-label");
+    if(labelEl) labelEl.textContent = label;
+    wrap.querySelectorAll(".csel-opt").forEach(function(o){
+      o.classList.toggle("selected", (o.getAttribute("data-value") || "") === filters.company);
+    });
+  });
 }
 
 function toggleCsel(el, ev){
@@ -393,24 +738,17 @@ function selectCsel(ev, optionEl, field, value, label){
   wrap.classList.remove("open");
   if(field){
     filters[field] = value;
-    applyFilters();
+    if(field === "company") syncCompanyDropdowns(label);
+    reloadBankOperationsDebounced();
   }
 }
 
-function applyFilters(){
-  document.querySelectorAll("#bank-rows tr[data-id]").forEach(function(tr){
-    var show = true;
-    if(filters.mode === "review" && tr.dataset.status !== "needs_review") show = false;
-    if(filters.company !== "all" && tr.dataset.company !== filters.company) show = false;
-    if(filters.status !== "all" && tr.dataset.status !== filters.status) show = false;
-    if(filters.conf !== "all" && tr.dataset.conf !== filters.conf) show = false;
-    if(filters.search && tr.dataset.desc.indexOf(filters.search) === -1) show = false;
-    tr.style.display = show ? "" : "none";
-  });
-}
-
-document.addEventListener("click", function(){
+document.addEventListener("click", function(ev){
   document.querySelectorAll(".csel.open").forEach(function(m){ m.classList.remove("open"); });
+  if(openTplPicker && !ev.target.closest(".tpl-cell")){
+    openTplPicker = null;
+    renderBankRows();
+  }
 });
 
 var currentUser = null;
@@ -430,10 +768,19 @@ function doLogin(){
   document.getElementById("user-avatar").textContent = currentUser.initials;
   document.getElementById("screen-login").style.display = "none";
   document.getElementById("screen-app").style.display = "flex";
+  loadBankOperationsScreen();
 }
 
 function doLogout(){
   currentUser = null;
+  bankRows = [];
+  templates = [];
+  companies = [];
+  pagination = {page: 1, limit: 50, total: 0, hasMore: false};
+  if(scrollObserver){
+    scrollObserver.disconnect();
+    scrollObserver = null;
+  }
   document.getElementById("login-email").value = "";
   document.getElementById("login-password").value = "";
   document.getElementById("login-error").style.display = "none";
@@ -443,32 +790,41 @@ function doLogout(){
 
 function accountLabel(code, name){
   return code
-    ? '<span style="display:flex;align-items:center;gap:5px;font-size:11.5px"><i class="ti ti-building-bank" style="font-size:13px;color:var(--brand-text)"></i>'+code+' '+name+'</span>'
+    ? '<span style="display:flex;align-items:center;gap:5px;font-size:11.5px"><i class="ti ti-building-bank" style="font-size:13px;color:var(--brand-text)"></i>'+escapeHtml(code)+' '+escapeHtml(name)+'</span>'
     : '<span style="color:var(--text-muted);font-size:11.5px">&mdash;</span>';
 }
 
 var openTplPicker = null;
 
 function tplChip(row){
-  var t = templates.find(function(x){ return x.code === row.note; });
   var isOpen = openTplPicker === row.id;
-  var label = t
-    ? '<i class="ti ti-file-text" style="font-size:13px;color:var(--brand-text)"></i> '+t.name
+  var isLoading = applyingTemplateRowId === row.id;
+  var displayName = templateDisplayName(row);
+  var label = displayName
+    ? '<i class="ti ti-file-text" style="font-size:13px;color:var(--brand-text)"></i> '+escapeHtml(displayName)
     : '<span style="color:var(--text-danger)"><i class="ti ti-alert-triangle" style="font-size:13px"></i> не определён</span>';
 
-  var html = '<div style="position:relative" onclick="event.stopPropagation()">';
-  html += '<div class="acct-chip'+(isOpen?" open":"")+'" onclick="toggleTplPicker(\''+row.id+'\')" title="Нажмите, чтобы выбрать шаблон проводки">';
+  var html = '<div class="tpl-cell" data-stop-detail="1" style="position:relative">';
+  html += '<div class="acct-chip'+(isOpen?" open":"")+(isLoading?" loading":"")+'" data-row-id="'+escapeAttr(row.id)+'" data-action="toggle-tpl" title="Нажмите, чтобы выбрать шаблон проводки">';
   html += '<span class="chip-label">'+label+'</span><i class="ti ti-chevron-down" style="font-size:12px;color:var(--text-muted)"></i>';
   html += '</div>';
   if(isOpen){
-    html += '<div style="position:absolute;top:100%;right:0;z-index:10;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:6px;width:280px">';
-    html += '<input type="text" placeholder="Найти шаблон..." style="width:100%;height:28px;margin-bottom:6px" oninput="filterTplPicker(\''+row.id+'\',this.value)" />';
-    html += '<div id="tpl-picker-options-'+row.id+'" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">';
-    templates.forEach(function(tt){
-      html += '<div class="tpl-opt" data-name="'+tt.name.toLowerCase()+'" onclick="applyTemplate(\''+row.id+'\',\''+tt.code+'\')" style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px">';
-      html += '<span>'+tt.name+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;flex-shrink:0">'+tt.debit+' &rarr; '+tt.credit+'</span>';
-      html += '</div>';
-    });
+    var rowTemplates = templatesForPicker(row);
+    html += '<div class="tpl-picker" style="position:absolute;top:100%;right:0;z-index:20;background:var(--surface-2);border:0.5px solid var(--border-strong);border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.18);padding:6px;width:320px">';
+    html += '<input type="text" class="tpl-picker-search" data-row-id="'+escapeAttr(row.id)+'" placeholder="Поиск по названию..." style="width:100%;height:28px;margin-bottom:6px" />';
+    html += '<div id="tpl-picker-options-'+escapeAttr(row.id)+'" style="max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:2px">';
+    if(templatesLoading){
+      html += '<div style="padding:8px;color:var(--text-muted);font-size:12px"><i class="ti ti-loader" style="margin-right:4px"></i>Загрузка шаблонов...</div>';
+    } else if(!rowTemplates.length){
+      html += '<div style="padding:8px;color:var(--text-muted);font-size:12px">Шаблоны не найдены</div>';
+    } else {
+      rowTemplates.forEach(function(tt){
+        var selected = tt.guid === row.templateGuid;
+        html += '<div class="tpl-opt'+(selected?" selected":"")+(isLoading?" disabled":"")+'" data-action="apply-tpl" data-row-id="'+escapeAttr(row.id)+'" data-tpl-guid="'+escapeAttr(tt.guid)+'" data-tpl-name="'+escapeAttr(tt.name||"")+'" data-name="'+escapeAttr((tt.name||"").toLowerCase())+'" data-code="'+escapeAttr((tt.code||"").toLowerCase())+'" style="display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border-radius:6px;cursor:pointer;font-size:12px'+(selected?";background:var(--brand-tint)":"")+'">';
+        html += '<span>'+escapeHtml(tt.name)+'</span><span style="color:var(--text-muted);font-family:var(--font-mono);font-size:11px;flex-shrink:0">'+escapeHtml(tt.debit)+' &rarr; '+escapeHtml(tt.credit)+'</span>';
+        html += '</div>';
+      });
+    }
     html += '</div></div>';
   }
   html += '</div>';
@@ -476,20 +832,60 @@ function tplChip(row){
 }
 
 function toggleTplPicker(rowId){
-  openTplPicker = openTplPicker === rowId ? null : rowId;
+  var next = openTplPicker === rowId ? null : rowId;
+  openTplPicker = next;
   renderBankRows();
+  if(!next) return;
+  loadTemplatesForPicker(true).then(function(){
+    if(openTplPicker === rowId) renderBankRows();
+  });
 }
 
 function filterTplPicker(rowId, q){
-  q = q.toLowerCase();
+  q = (q || "").toLowerCase();
   document.querySelectorAll("#tpl-picker-options-"+rowId+" .tpl-opt").forEach(function(el){
-    el.style.display = el.getAttribute("data-name").indexOf(q) > -1 ? "flex" : "none";
+    var hay = (el.getAttribute("data-name") || "") + " " + (el.getAttribute("data-code") || "");
+    el.style.display = hay.indexOf(q) > -1 ? "flex" : "none";
+  });
+}
+
+function bindBankTableEvents(){
+  var tbody = document.getElementById("bank-rows");
+  if(!tbody || tbody.getAttribute("data-bound") === "1") return;
+  tbody.setAttribute("data-bound", "1");
+  tbody.addEventListener("click", function(ev){
+    var stopEl = ev.target.closest("[data-stop-detail]");
+    if(stopEl){
+      ev.stopPropagation();
+      var chip = ev.target.closest("[data-action='toggle-tpl']");
+      if(chip){
+        toggleTplPicker(chip.getAttribute("data-row-id") || "");
+        return;
+      }
+      var opt = ev.target.closest("[data-action='apply-tpl']");
+      if(opt){
+        applyTemplateGuid(
+          opt.getAttribute("data-row-id") || "",
+          opt.getAttribute("data-tpl-guid") || "",
+          opt.getAttribute("data-tpl-name") || ""
+        );
+        return;
+      }
+      return;
+    }
+    var rowEl = ev.target.closest("tr[data-id]");
+    if(rowEl) openDetail(rowEl.getAttribute("data-id") || "");
+  });
+  tbody.addEventListener("input", function(ev){
+    var input = ev.target.closest(".tpl-picker-search");
+    if(!input) return;
+    filterTplPicker(input.getAttribute("data-row-id") || "", input.value);
   });
 }
 
 function auditNote(row){
   if(!row.modifiedBy) return "";
-  return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:3px"><i class="ti ti-user-check" style="font-size:11px"></i>'+row.modifiedBy+' · '+row.modifiedAt+'</div>';
+  return '<div style="font-size:10px;color:var(--text-muted);margin-top:3px;display:flex;align-items:center;gap:3px"><i class="ti ti-user-check" style="font-size:11px"></i>'+escapeHtml(row.modifiedBy)+' · '+escapeHtml(row.modifiedAt)+'</div>';
 }
 
 var currentDetailRow = null;
@@ -533,17 +929,17 @@ function renderDetail(){
       ["arrowUpRight", "Кредит счёт", r.credit ? r.credit + " " + r.creditName : "—"],
       ["check", "Статус", r.status === "posted" ? "posted" : "needs_review"],
       ["gauge", "Confidence", r.conf || "none"],
-      ["cpu", "Источник", r.source2 === "ai" ? "AI" : (r.modifiedBy || "admin")]
+      ["cpu", "Источник", (r.sourceType || r.source2) === "ai" ? "AI" : "admin"]
     ];
     var html = "";
     rows.forEach(function(row){
-      html += '<div class="detail-row"><span class="detail-label">'+mi(row[0])+row[1]+'</span><span class="detail-value">'+row[2]+'</span></div>';
+      html += '<div class="detail-row"><span class="detail-label">'+mi(row[0])+escapeHtml(row[1])+'</span><span class="detail-value">'+escapeHtml(row[2])+'</span></div>';
     });
     body.innerHTML = html;
   } else {
     var entries = (r.history || []).slice();
     if(entries.length === 0){
-      var t = templates.find(function(x){ return x.code === r.note; });
+      var t = findTemplateForRow(r);
       entries.push({
         by: "ИИ",
         at: "—",
@@ -555,91 +951,121 @@ function renderDetail(){
     var html = "";
     entries.forEach(function(e){
       html += '<div class="log-item"><div class="log-dot'+(e.ai?" ai":"")+'">'+mi(e.ai?"cpu":"userCheck",16)+'</div>';
-      html += '<div><div class="log-text">'+e.action+'</div><div class="log-meta">'+(e.ai ? "Определено автоматически" : "Изменено пользователем")+': <strong style="color:var(--text-secondary)">'+e.by+'</strong> · '+e.at+'</div></div></div>';
+      html += '<div><div class="log-text">'+escapeHtml(e.action)+'</div><div class="log-meta">'+(e.ai ? "Определено автоматически" : "Изменено пользователем")+': <strong style="color:var(--text-secondary)">'+escapeHtml(e.by)+'</strong> · '+escapeHtml(e.at)+'</div></div></div>';
     });
     body.innerHTML = html;
   }
 }
 
+function postingSourceBadge(sourceType){
+  var v = String(sourceType || "").toLowerCase();
+  if(v === "ai") return badge("AI","var(--brand-tint)","var(--brand-text)");
+  if(v === "admin") return badge("admin","var(--bg-warning)","var(--text-warning)");
+  if(!v) return badge("—","var(--surface-1)","var(--text-muted)");
+  return badge(v,"var(--surface-1)","var(--text-secondary)");
+}
+
 function renderBankRows(){
+  var tbody = document.getElementById("bank-rows");
+  if(!bankRows.length && !screenLoading){
+    tbody.innerHTML = '<tr><td colspan="15" class="table-state">Операции не найдены</td></tr>';
+    return;
+  }
   var html = "";
   bankRows.forEach(function(r){
     var rowBg = r.flagged ? "background:var(--bg-danger)" : "background:var(--surface-2)";
     var typeBadge = r.type === "in" ? badge("Поступление","var(--bg-success)","var(--text-success)") : badge("Выплата","var(--bg-danger)","var(--text-danger)");
-    var srcBadge = r.source === "bank" ? badge("bank","var(--brand-tint)","var(--brand-text)") : badge("manual","var(--surface-1)","var(--text-secondary)");
+    var srcBadge = postingSourceBadge(r.sourceType || r.source2);
     var statusBadge = r.status === "posted" ? badge("posted","var(--bg-success)","var(--text-success)") : badge("needs_review","var(--bg-danger)","var(--text-danger)");
     var confBadge = r.conf === "high" ? badge("high","var(--brand-tint)","var(--brand-text)") : r.conf === "low" ? badge("low","var(--bg-warning)","var(--text-warning)") : badge("none","var(--surface-1)","var(--text-muted)");
-    var srcIcon = r.source2 === "ai" ? '<i class="ti ti-cpu" style="font-size:15px;color:var(--brand-text)" title="ai"></i>' : '<i class="ti ti-user" style="font-size:15px;color:var(--text-secondary)" title="'+(r.modifiedBy || "admin")+'"></i>';
-    var companyKey = r.company.indexOf("UDEVS") > -1 ? "UDEVS" : "HISOBIM";
 
-    html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+';cursor:pointer" data-id="'+r.id+'" data-company="'+companyKey+'" data-status="'+r.status+'" data-conf="'+(r.conf||"none")+'" data-desc="'+r.desc.toLowerCase()+'" onclick="openDetail(\''+r.id+'\')">';
-    html += '<td style="position:sticky;left:0;'+rowBg+'">'+r.company+'</td>';
-    html += '<td style="position:sticky;left:170px;'+rowBg+';font-family:var(--font-mono);font-size:11.5px">'+r.account+'</td>';
-    html += '<td style="text-align:right;font-family:var(--font-mono)">'+r.amount+'</td>';
+    html += '<tr class="row-'+(r.flagged?'review':'ok')+'" style="'+rowBg+';cursor:pointer" data-id="'+escapeAttr(r.id)+'" data-company="'+escapeAttr(r.companyId)+'" data-status="'+escapeAttr(r.status)+'" data-conf="'+escapeAttr(r.conf||"none")+'" data-desc="'+escapeAttr((r.desc||"").toLowerCase())+'">';
+    html += '<td style="position:sticky;left:0;'+rowBg+'">'+escapeHtml(r.company)+'</td>';
+    html += '<td style="position:sticky;left:170px;'+rowBg+';font-family:var(--font-mono);font-size:11.5px">'+escapeHtml(r.account)+'</td>';
+    html += '<td style="text-align:right;font-family:var(--font-mono)">'+escapeHtml(r.amount)+'</td>';
     html += '<td>'+typeBadge+'</td>';
     html += '<td>'+srcBadge+'</td>';
-    html += '<td>'+r.counterparty+'</td>';
-    html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+r.desc+'">'+r.desc+'</td>';
+    html += '<td>'+escapeHtml(r.counterparty)+'</td>';
+    html += '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+escapeAttr(r.desc)+'">'+escapeHtml(r.desc)+'</td>';
     html += '<td>'+accountLabel(r.debit, r.debitName)+'</td>';
     html += '<td>'+accountLabel(r.credit, r.creditName)+'</td>';
-    html += '<td>'+r.opDate+'</td>';
-    html += '<td style="color:'+(r.contract==="—"?"var(--text-muted)":"var(--text-primary)")+'">'+r.contract+'</td>';
+    html += '<td>'+escapeHtml(r.opDate)+'</td>';
+    html += '<td style="color:'+(r.contract==="—"?"var(--text-muted)":"var(--text-primary)")+'">'+escapeHtml(r.contract)+'</td>';
     html += '<td>'+statusBadge+'</td>';
-    html += '<td>'+srcIcon+'</td>';
     html += '<td>'+confBadge+'</td>';
-    html += '<td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">'+r.note+'</td>';
+    html += '<td style="font-family:var(--font-mono);font-size:11px;color:var(--text-muted)">'+escapeHtml(r.note)+'</td>';
     html += '<td style="font-size:11.5px">'+tplChip(r)+auditNote(r)+'</td>';
     html += '</tr>';
   });
-  document.getElementById("bank-rows").innerHTML = html;
-  applyFilters();
+  if(loadingMore){
+    html += '<tr><td colspan="15" class="table-state"><i class="ti ti-loader" style="margin-right:6px"></i>Загрузка...</td></tr>';
+  } else if(pagination.hasMore){
+    html += '<tr id="bank-scroll-sentinel"><td colspan="15" class="table-state" style="padding:16px;color:var(--text-muted);font-size:12px">Прокрутите вниз для загрузки · '+escapeHtml(String(bankRows.length))+' / '+escapeHtml(String(pagination.total))+'</td></tr>';
+  } else if(pagination.total > pagination.limit){
+    html += '<tr><td colspan="15" class="table-state" style="padding:16px;font-size:12px">Все операции загружены ('+escapeHtml(String(bankRows.length))+')</td></tr>';
+  }
+  tbody.innerHTML = html;
+  bindBankTableEvents();
 }
 
-function applyTemplate(rowId, code){
-  var t = templates.find(function(x){ return x.code === code; });
+async function applyTemplateGuid(rowId, templateGuid, templateName){
+  if(applyingTemplateRowId || !templateGuid) return;
   var row = bankRows.find(function(x){ return x.id === rowId; });
-  var debitAcct = accounts.find(function(a){ return a.code === String(t.debit); });
-  var creditAcct = accounts.find(function(a){ return a.code === String(t.credit); });
-  var prevTemplate = templates.find(function(x){ return x.code === row.note; });
-  var fromLabel = prevTemplate ? prevTemplate.name : "не определён";
-  row.debit = String(t.debit);
-  row.debitName = debitAcct ? debitAcct.name : "";
-  row.credit = String(t.credit);
-  row.creditName = creditAcct ? creditAcct.name : "";
-  row.status = "posted";
-  row.source2 = "admin";
-  row.conf = "";
-  row.flagged = false;
-  row.note = t.code;
-  row.modifiedBy = currentUser ? currentUser.name : "admin";
-  row.modifiedAt = new Date().toLocaleString("ru-RU", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
-  row.history = row.history || [];
-  row.history.push({by: row.modifiedBy, at: row.modifiedAt, action: "Изменил шаблон: «"+fromLabel+"» → «"+t.name+"»"});
-  openTplPicker = null;
+  if(!row) return;
+  var tmpl = templates.find(function(x){ return x.guid === templateGuid; });
+  applyingTemplateRowId = rowId;
   renderBankRows();
+  try {
+    var raw = await invokeFunction("confirm_operation_type", {
+      guid: row.id,
+      accounting_templates_id: templateGuid
+    });
+    var data = unwrapInvokeResponse(raw);
+    if(data && data.success === false) throw new Error(data.message || "confirm failed");
+    row.templateGuid = data.accounting_template_guid || templateGuid;
+    row.templateName = templateName || (tmpl && tmpl.name) || row.templateName;
+    row.status = "posted";
+    row.source2 = "admin";
+    row.sourceType = "admin";
+    row.flagged = false;
+    row.note = data.accounting_template_code || row.note;
+    row.debit = data.debit_account_code || row.debit;
+    row.credit = data.credit_account_code || row.credit;
+    openTplPicker = null;
+    await loadBankOperationsScreen({append: false});
+  } catch(e){
+    alert("Шаблон tasdiqlanmadi: " + (e.message || e));
+  } finally {
+    applyingTemplateRowId = null;
+    renderBankRows();
+  }
 }
 
 function filterRows(mode, btn){
-  document.querySelectorAll(".btn").forEach(function(b){ b.classList.remove("active"); });
+  document.querySelectorAll("#screen-bank .btn").forEach(function(b){ b.classList.remove("active"); });
   btn.classList.add("active");
   filters.mode = mode;
-  applyFilters();
+  reloadBankOperationsDebounced();
 }
 
 function renderTplRows(){
+  if(!templates.length){
+    document.getElementById("tpl-rows").innerHTML = '<tr><td colspan="9" class="table-state">Шаблоны не загружены</td></tr>';
+    return;
+  }
   var html = "";
   templates.forEach(function(t, i){
     var dirBadge = t.direction === "income" ? badge("income","var(--bg-success)","var(--text-success)") : badge("expense","var(--bg-danger)","var(--text-danger)");
     html += "<tr>";
     html += '<td style="color:var(--text-muted)">'+(i+1)+'</td>';
-    html += '<td style="font-family:var(--font-mono);font-size:11.5px">'+t.code+'</td>';
-    html += '<td>'+t.name+'</td>';
-    html += '<td style="text-align:right;font-family:var(--font-mono)">'+t.debit+'</td>';
-    html += '<td style="text-align:right;font-family:var(--font-mono)">'+t.credit+'</td>';
-    html += '<td>'+badge("bank","var(--brand-tint)","var(--brand-text)")+'</td>';
+    html += '<td style="font-family:var(--font-mono);font-size:11.5px">'+escapeHtml(t.code)+'</td>';
+    html += '<td>'+escapeHtml(t.name)+'</td>';
+    html += '<td style="text-align:right;font-family:var(--font-mono)">'+escapeHtml(t.debit)+'</td>';
+    html += '<td style="text-align:right;font-family:var(--font-mono)">'+escapeHtml(t.credit)+'</td>';
+    html += '<td>'+badge(t.source || "bank","var(--brand-tint)","var(--brand-text)")+'</td>';
     html += '<td>'+dirBadge+'</td>';
-    html += '<td style="text-align:center"><input type="checkbox" checked /></td>';
-    html += '<td><i class="ti ti-trash" style="font-size:16px;color:var(--text-danger);cursor:pointer"></i></td>';
+    html += '<td style="text-align:center"><input type="checkbox" checked disabled /></td>';
+    html += '<td></td>';
     html += "</tr>";
   });
   document.getElementById("tpl-rows").innerHTML = html;
@@ -654,11 +1080,13 @@ function showScreen(name){
   document.getElementById("screen-sub").textContent = name === "bank" ? "Импорт из банка и сопоставление с проводками" : "Справочник шаблонов бухгалтерских проводок";
 }
 
-renderBankRows();
-renderTplRows();
-buildCsel("csel-company", "company", [{label:"Компания: все",value:"all"},{label:"UDEVS",value:"UDEVS"},{label:"HISOBIM",value:"HISOBIM"}], 150);
 buildCsel("csel-status", "status", [{label:"Статус: все",value:"all"},{label:"posted",value:"posted"},{label:"needs_review",value:"needs_review"}], 150);
 buildCsel("csel-conf", "conf", [{label:"Confidence: все",value:"all"},{label:"high",value:"high"},{label:"low",value:"low"},{label:"none",value:"none"}], 150);
+buildCsel("csel-company", "company", [{label:"Компания: все",value:"all"}], 180);
+buildCsel("csel-header-company", "company", [{label:"Компания: все",value:"all"}], 240);
+document.getElementById("app-main").addEventListener("scroll", onAppMainScroll, {passive: true});
+document.getElementById("bank-rows").innerHTML = '<tr><td colspan="15" class="table-state">Войдите, чтобы загрузить операции</td></tr>';
+document.getElementById("tpl-rows").innerHTML = '<tr><td colspan="9" class="table-state">Войдите, чтобы загрузить шаблоны</td></tr>';
 </script>
 
 </body>
