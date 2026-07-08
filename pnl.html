@@ -167,6 +167,7 @@
   #tab-pnl .header .titles p{
     font-size:11.5px;color:var(--muted);margin:0;font-weight:600;letter-spacing:.1px;
   }
+  #tab-pnl .header .titles p .date-range{color:var(--blue);font-weight:700;letter-spacing:0;}
   #tab-pnl .header .icon-btn{
     width:32px;height:32px;flex:0 0 auto;border-radius:10px;
     background:var(--soft-bg);
@@ -404,6 +405,150 @@
   #tab-pnl table.detail tr.total td:first-child{border-radius:9px 0 0 9px;padding-left:8px;}
   #tab-pnl table.detail tr.total td:last-child{border-radius:0 9px 9px 0;padding-right:8px;}
   #tab-pnl table.detail tr.total td.pos{color:var(--green);}
+
+  /* ---------- P&L period selector (Период) ---------- */
+  #tab-pnl .period-btn{
+    display:inline-flex;align-items:center;gap:6px;flex:1;min-width:0;
+    background:var(--soft-bg);border-radius:9px;
+    padding:6px 10px;font-size:11.5px;font-weight:600;color:#2b2f3a;letter-spacing:.1px;
+    cursor:pointer;
+  }
+  #tab-pnl .period-btn .p-cap{color:var(--muted);font-weight:600;flex:0 0 auto;}
+  #tab-pnl .period-btn .p-val{color:#0d0f16;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0;}
+  #tab-pnl .period-btn svg{width:10px;height:10px;color:var(--muted);flex:0 0 auto;}
+
+  /* period bottom sheet */
+  #tab-pnl .period-overlay{
+    position:absolute;inset:0;background:rgba(15,17,25,.4);
+    display:flex;align-items:flex-end;justify-content:center;
+    opacity:0;pointer-events:none;transition:opacity .22s ease;z-index:3;
+  }
+  #tab-pnl .period-overlay.visible{opacity:1;}
+  #tab-pnl.active .period-overlay.visible{pointer-events:auto;}
+  #tab-pnl .period-sheet{
+    width:100%;background:#fff;border-radius:22px 22px 0 0;
+    box-shadow:0 -12px 32px rgba(20,25,40,.18);
+    padding:16px 18px 18px;max-height:88%;overflow:hidden;
+    transform:translateY(100%);
+    transition:transform .28s cubic-bezier(.32,.72,0,1);
+    display:flex;flex-direction:column;
+  }
+  #tab-pnl .period-overlay.visible .period-sheet{transform:translateY(0);}
+  #tab-pnl .period-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex:0 0 auto;
+  }
+  #tab-pnl .period-head .p-back{
+    width:26px;height:26px;border-radius:8px;background:var(--soft-bg);
+    display:none;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex:0 0 auto;
+  }
+  #tab-pnl .period-head .p-back svg{width:13px;height:13px;}
+  #tab-pnl .period-head h3{font-size:15px;font-weight:800;color:var(--blue);margin:0;letter-spacing:-.2px;flex:1;}
+  #tab-pnl .period-head .p-close{
+    width:26px;height:26px;border-radius:8px;background:var(--soft-bg);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);flex:0 0 auto;
+  }
+  #tab-pnl .period-head .p-close svg{width:12px;height:12px;}
+
+  #tab-pnl .period-view{display:none;flex-direction:column;min-height:0;}
+  #tab-pnl .period-view.active{display:flex;flex:1 1 auto;min-height:0;}
+
+  /* year navigator */
+  #tab-pnl .pp-year{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    background:var(--blue-bg);border-radius:12px;padding:7px 8px;margin-bottom:14px;flex:0 0 auto;
+  }
+  #tab-pnl .pp-year .pp-nav{
+    width:32px;height:32px;border:none;border-radius:9px;background:#fff;color:var(--blue);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 6px rgba(0,111,125,.12);
+  }
+  #tab-pnl .pp-year .pp-nav svg{width:15px;height:15px;}
+  #tab-pnl .pp-year .pp-year-label{font-size:15px;font-weight:600;color:#0d0f16;letter-spacing:-.1px;}
+  #tab-pnl .pp-year .pp-year-label b{color:var(--blue);font-weight:800;}
+
+  /* scroll wrapper for the grids */
+  #tab-pnl .pp-scroll{flex:1 1 auto;overflow-y:auto;min-height:0;scrollbar-width:none;}
+  #tab-pnl .pp-scroll::-webkit-scrollbar{display:none;}
+
+  #tab-pnl .pp-section-label{
+    font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.5px;
+    text-transform:uppercase;margin:0 0 7px 2px;
+  }
+  #tab-pnl .pp-grid{display:grid;gap:7px;margin-bottom:16px;}
+  #tab-pnl .pp-months{grid-template-columns:repeat(3,1fr);}
+  #tab-pnl .pp-quarters{grid-template-columns:repeat(4,1fr);}
+  #tab-pnl .pp-periods{grid-template-columns:repeat(3,1fr);}
+
+  #tab-pnl .pp-cell{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+    border:1.5px solid #e7ebf0;background:#fff;border-radius:11px;
+    padding:11px 4px;font-size:11.8px;font-weight:600;color:#2b2f3a;letter-spacing:.1px;
+    cursor:pointer;font-family:inherit;text-align:center;line-height:1.15;transition:.12s;
+  }
+  #tab-pnl .pp-cell:hover{border-color:var(--blue);color:var(--blue);}
+  #tab-pnl .pp-cell.active{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 5px 12px rgba(0,111,125,.28);}
+  #tab-pnl .pp-cell .pp-sub{font-size:8.5px;font-weight:600;color:var(--muted);letter-spacing:.1px;}
+  #tab-pnl .pp-cell:hover .pp-sub{color:var(--blue);}
+  #tab-pnl .pp-cell.active .pp-sub{color:rgba(255,255,255,.85);}
+
+  #tab-pnl .pp-custom{
+    width:100%;display:flex;align-items:center;justify-content:center;gap:7px;
+    border:1.5px dashed #ccd4dc;background:var(--soft-bg);border-radius:12px;
+    padding:12px;font-size:12.5px;font-weight:700;color:var(--blue);letter-spacing:.1px;
+    cursor:pointer;font-family:inherit;
+  }
+  #tab-pnl .pp-custom svg{width:15px;height:15px;}
+  #tab-pnl .pp-custom.active{background:var(--blue-bg);border-style:solid;border-color:var(--blue);}
+
+  /* calendar (Свой период) */
+  #tab-pnl .cal-range{
+    display:flex;gap:8px;margin-bottom:12px;flex:0 0 auto;
+  }
+  #tab-pnl .cal-range .cr-field{
+    flex:1;background:var(--soft-bg);border-radius:10px;padding:8px 10px;
+  }
+  #tab-pnl .cal-range .cr-field .cr-cap{font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.3px;text-transform:uppercase;margin-bottom:2px;}
+  #tab-pnl .cal-range .cr-field .cr-date{font-size:13px;font-weight:700;color:#0d0f16;}
+  #tab-pnl .cal-range .cr-field.empty .cr-date{color:#b7bcc9;}
+  #tab-pnl .cal-range .cr-field.focus{box-shadow:inset 0 0 0 1.5px var(--blue);}
+
+  #tab-pnl .cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex:0 0 auto;}
+  #tab-pnl .cal-nav .cn-title{font-size:13.5px;font-weight:700;color:#0d0f16;letter-spacing:-.1px;}
+  #tab-pnl .cal-nav .cn-btn{
+    width:28px;height:28px;border-radius:8px;background:var(--soft-bg);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text);
+  }
+  #tab-pnl .cal-nav .cn-btn svg{width:14px;height:14px;}
+
+  #tab-pnl .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;flex:0 0 auto;}
+  #tab-pnl .cal-grid .cal-dow{
+    text-align:center;font-size:9.5px;font-weight:700;color:var(--muted);
+    padding:4px 0 6px;text-transform:uppercase;letter-spacing:.2px;
+  }
+  #tab-pnl .cal-cell{
+    aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+    font-size:12px;font-weight:600;color:#3a3f4d;cursor:pointer;position:relative;
+    border-radius:9px;
+  }
+  #tab-pnl .cal-cell.empty{cursor:default;}
+  #tab-pnl .cal-cell.muted{color:#c7cbd6;}
+  #tab-pnl .cal-cell:not(.empty):hover{background:var(--soft-bg);}
+  #tab-pnl .cal-cell.in-range{background:var(--blue-bg);border-radius:0;color:var(--blue);}
+  #tab-pnl .cal-cell.range-start{background:var(--blue-bg);border-radius:9px 0 0 9px;}
+  #tab-pnl .cal-cell.range-end{background:var(--blue-bg);border-radius:0 9px 9px 0;}
+  #tab-pnl .cal-cell.range-start.range-end{border-radius:9px;}
+  #tab-pnl .cal-cell.selected{color:#fff;}
+  #tab-pnl .cal-cell.selected::before{
+    content:"";position:absolute;inset:0;background:var(--blue);border-radius:9px;z-index:0;
+  }
+  #tab-pnl .cal-cell.selected span{position:relative;z-index:1;}
+  #tab-pnl .cal-apply{
+    margin-top:14px;flex:0 0 auto;border:none;width:100%;
+    background:var(--blue);color:#fff;border-radius:12px;padding:12px;
+    font-size:13.5px;font-weight:700;letter-spacing:.1px;cursor:pointer;font-family:inherit;
+    box-shadow:0 8px 16px rgba(0,111,125,.28);
+  }
+  #tab-pnl .cal-apply:disabled{opacity:.45;box-shadow:none;cursor:default;}
 
   /* =========================================================
      #tab-balance — scoped styles for the Balance Sheet report
@@ -723,18 +868,16 @@
           <div class="header">
             <div class="titles">
               <h1>Отчет о финансовых результатах</h1>
-              <p>Форма № 2</p>
+              <p><b class="date-range">01.07 — 30.09.26</b> · Форма № 2</p>
             </div>
           </div>
 
           <div class="content">
             <div class="toolbar">
-              <div class="segmented" style="flex:1;">
-                <button class="active" id="tabPrev">Прошлый год</button>
-                <button id="tabCurr">Отчетный год</button>
-              </div>
-              <div class="filter-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+              <div class="period-btn" data-open-period>
+                <span class="p-cap">Период:</span>
+                <span class="p-val">3 квартал 2026</span>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5l3.5 3 3.5-3"/></svg>
               </div>
             </div>
 
@@ -777,20 +920,16 @@
             <div class="back" data-goto="table"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
             <div class="titles">
               <h1>Отчет о финансовых результатах</h1>
-              <p>Форма № 2</p>
+              <p><b class="date-range">01.07 — 30.09.26</b> · Форма № 2</p>
             </div>
-            <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg></div>
           </div>
 
           <div class="content scroll">
-            <div class="segmented">
-              <button class="active" id="tabPrev2">Прошлый год</button>
-              <button id="tabCurr2">Отчетный год</button>
-            </div>
-
-            <div class="toolbar" style="justify-content:flex-end;">
-              <div class="filter-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg>
+            <div class="toolbar">
+              <div class="period-btn" data-open-period>
+                <span class="p-cap">Период:</span>
+                <span class="p-val">3 квартал 2026</span>
+                <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5l3.5 3 3.5-3"/></svg>
               </div>
             </div>
 
@@ -805,7 +944,7 @@
                 <span class="value">-16 450</span>
                 <div class="foot"><span class="pct">+6.2%</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
               </div>
-              <div class="mini-card profit" data-chip="all">
+              <div class="mini-card profit" data-chip="net">
                 <span class="label">Чистая прибыль</span>
                 <span class="value">2 220</span>
                 <div class="foot"><span class="pct">+12.8%</span><span class="chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></div>
@@ -815,10 +954,9 @@
             <div class="section-title">Детализация</div>
 
             <div class="chip-row" data-group="chips">
-              <button class="chip active" data-chip="all">Все</button>
               <button class="chip" data-chip="income">Доходы</button>
               <button class="chip" data-chip="expense">Расходы</button>
-              <button class="chip" data-chip="other">Прочее</button>
+              <button class="chip" data-chip="net">Чистая прибыль</button>
             </div>
 
             <div class="row-list">
@@ -854,9 +992,21 @@
                 <span class="name">Расходы отчетного периода, вычитаемые из налогооблагаемой прибыли в будущем</span>
                 <div class="right"><div class="nums"><span class="num neg">-700</span><span class="pct up">+9.2%</span></div><span class="caret">›</span></div>
               </div>
-              <div class="item-row" data-category="income">
+              <div class="item-row subtotal" data-category="income">
                 <span class="name">Прочие доходы от основной деятельности</span>
                 <div class="right"><div class="nums"><span class="num">850</span><span class="pct up">+6.0%</span></div><span class="caret">›</span></div>
+              </div>
+              <div class="item-row child" data-category="income">
+                <span class="name">Прибыль от выбытия основных средств</span>
+                <div class="right"><div class="nums"><span class="num">400</span><span class="pct up">+7.5%</span></div><span class="caret">›</span></div>
+              </div>
+              <div class="item-row child" data-category="income">
+                <span class="name">Прибыль от выбытия иных активов</span>
+                <div class="right"><div class="nums"><span class="num">250</span><span class="pct up">+5.0%</span></div><span class="caret">›</span></div>
+              </div>
+              <div class="item-row child" data-category="income">
+                <span class="name">Взысканные штрафы, пени, неустойки</span>
+                <div class="right"><div class="nums"><span class="num">200</span><span class="pct up">+4.2%</span></div><span class="caret">›</span></div>
               </div>
               <div class="item-row subtotal" data-category="other">
                 <span class="name">Прибыль (убыток) от основной деятельности</span>
@@ -914,19 +1064,19 @@
                 <span class="name">Чрезвычайные прибыли и убытки</span>
                 <div class="right"><div class="nums"><span class="num neg">-80</span><span class="pct down">-15.0%</span></div><span class="caret">›</span></div>
               </div>
-              <div class="item-row subtotal" data-category="other">
+              <div class="item-row subtotal" data-category="net">
                 <span class="name">Прибыль (убыток) до уплаты налога на прибыль</span>
                 <div class="right"><div class="nums"><span class="num">7 620</span><span class="pct up">+9.0%</span></div><span class="caret">›</span></div>
               </div>
-              <div class="item-row" data-category="expense">
+              <div class="item-row child" data-category="net">
                 <span class="name">Налог на прибыль (налог с оборота)</span>
                 <div class="right"><div class="nums"><span class="num neg">-2 000</span><span class="pct up">+18.0%</span></div><span class="caret">›</span></div>
               </div>
-              <div class="item-row" data-category="expense">
+              <div class="item-row child" data-category="net">
                 <span class="name">Прочие налоги и другие обязательные платежи от прибыли</span>
                 <div class="right"><div class="nums"><span class="num neg">-170</span><span class="pct up">+6.0%</span></div><span class="caret">›</span></div>
               </div>
-              <div class="item-row subtotal" data-category="other">
+              <div class="item-row subtotal" data-category="net">
                 <span class="name">Чистая прибыль (убыток) отчетного периода</span>
                 <div class="right"><div class="nums"><span class="num">3 450</span><span class="pct up">+12.8%</span></div><span class="caret">›</span></div>
               </div>
@@ -958,6 +1108,79 @@
           </div>
         </section>
 
+      </div>
+
+      <!-- P&L period selector (Период) -->
+      <div class="period-overlay" id="pnlPeriodOverlay">
+        <div class="period-sheet">
+          <div class="period-head">
+            <div class="p-back" id="pnlPeriodBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+            <h3 id="pnlPeriodTitle">Выбор периода</h3>
+            <div class="p-close" id="pnlPeriodClose"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg></div>
+          </div>
+
+          <!-- VIEW: grid picker (year → months / quarters / quick periods) -->
+          <div class="period-view active" id="pnlPeriodListView">
+            <div class="pp-year">
+              <button class="pp-nav" id="pnlYearPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <div class="pp-year-label"><b id="pnlYearLabel">2026</b> год</div>
+              <button class="pp-nav" id="pnlYearNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+            </div>
+
+            <div class="pp-scroll">
+              <div class="pp-section-label">Месяцы</div>
+              <div class="pp-grid pp-months">
+                <button class="pp-cell" data-ptype="month" data-pval="0">Январь</button>
+                <button class="pp-cell" data-ptype="month" data-pval="1">Февраль</button>
+                <button class="pp-cell" data-ptype="month" data-pval="2">Март</button>
+                <button class="pp-cell" data-ptype="month" data-pval="3">Апрель</button>
+                <button class="pp-cell" data-ptype="month" data-pval="4">Май</button>
+                <button class="pp-cell" data-ptype="month" data-pval="5">Июнь</button>
+                <button class="pp-cell" data-ptype="month" data-pval="6">Июль</button>
+                <button class="pp-cell" data-ptype="month" data-pval="7">Август</button>
+                <button class="pp-cell" data-ptype="month" data-pval="8">Сентябрь</button>
+                <button class="pp-cell" data-ptype="month" data-pval="9">Октябрь</button>
+                <button class="pp-cell" data-ptype="month" data-pval="10">Ноябрь</button>
+                <button class="pp-cell" data-ptype="month" data-pval="11">Декабрь</button>
+              </div>
+
+              <div class="pp-section-label">Кварталы</div>
+              <div class="pp-grid pp-quarters">
+                <button class="pp-cell" data-ptype="quarter" data-pval="1">1 кв<span class="pp-sub">янв–мар</span></button>
+                <button class="pp-cell" data-ptype="quarter" data-pval="2">2 кв<span class="pp-sub">апр–июн</span></button>
+                <button class="pp-cell" data-ptype="quarter" data-pval="3">3 кв<span class="pp-sub">июл–сен</span></button>
+                <button class="pp-cell" data-ptype="quarter" data-pval="4">4 кв<span class="pp-sub">окт–дек</span></button>
+              </div>
+
+              <div class="pp-section-label">Быстрый выбор</div>
+              <div class="pp-grid pp-periods">
+                <button class="pp-cell" data-ptype="half" data-pval="1">Полугодие</button>
+                <button class="pp-cell" data-ptype="nine" data-pval="1">9 месяцев</button>
+                <button class="pp-cell" data-ptype="year" data-pval="1">Год</button>
+              </div>
+
+              <button class="pp-custom" id="pnlCustomBtn">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+                Свой период
+              </button>
+            </div>
+          </div>
+
+          <!-- VIEW: calendar range -->
+          <div class="period-view" id="pnlPeriodCalView">
+            <div class="cal-range">
+              <div class="cr-field focus empty" id="pnlCalFrom"><div class="cr-cap">Начало</div><div class="cr-date">Выберите</div></div>
+              <div class="cr-field empty" id="pnlCalTo"><div class="cr-cap">Конец</div><div class="cr-date">Выберите</div></div>
+            </div>
+            <div class="cal-nav">
+              <div class="cn-btn" id="pnlCalPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
+              <div class="cn-title" id="pnlCalTitle">Месяц</div>
+              <div class="cn-btn" id="pnlCalNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></div>
+            </div>
+            <div class="cal-grid" id="pnlCalGrid"></div>
+            <button class="cal-apply" id="pnlCalApply" disabled>Применить</button>
+          </div>
+        </div>
       </div>
 
       <!-- P&L bottom sheet: item detail -->
@@ -1007,14 +1230,13 @@
               <h1>Бухгалтерский баланс</h1>
               <p>Форма №1</p>
             </div>
-            <div class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16M7 12h10M10 19h4"/></svg></div>
           </div>
 
           <div class="content">
             <div class="scroll-area">
               <div class="segmented" data-group="home-date">
-                <button class="active">На 31.12.2023</button>
-                <button>На 31.12.2022</button>
+                <button class="active" data-year="cur">На 08.07.2026</button>
+                <button data-year="prev">На 31.12.2025</button>
               </div>
 
               <div class="cards-row" style="margin-top:14px;margin-bottom:14px;">
@@ -1067,7 +1289,7 @@
                   <circle cx="272" cy="24" r="4" fill="var(--blue)" stroke="#fff" stroke-width="2"/>
                 </svg>
                 <div class="chart-xlabels">
-                  <span>2021</span><span>2022</span><span>2023</span><span>2023 (12)</span>
+                  <span>2022</span><span>2023</span><span>2024</span><span>2025</span>
                 </div>
               </div>
 
@@ -1094,7 +1316,7 @@
             <div class="back" data-goto="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></div>
             <div class="titles">
               <h1>Детализация баланса</h1>
-              <a class="linklike"><span>На 31.12.2023</span><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5l3.5 3 3.5-3"/></svg></a>
+              <a class="linklike"><span class="bal-asof">На 08.07.2026</span><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2.5 4.5l3.5 3 3.5-3"/></svg></a>
             </div>
           </div>
 
@@ -1110,8 +1332,8 @@
               <div id="tab-assets" class="tab-panel active">
                 <div class="detail-group" style="margin-bottom:12px;">
                   <div class="g-head"><span class="g-name">Внеоборотные активы</span><span class="ghead-value"><span class="num">55 230</span><span class="pct">+8.6%</span></span></div>
-                  <div class="detail-row" data-sheet="nma"><span class="name">Нематериальные активы</span><span class="right"><span class="num">2 230</span><span class="pct up">+6.2%</span><span class="caret">›</span></span></div>
                   <div class="detail-row" data-sheet="os"><span class="name">Основные средства</span><span class="right"><span class="num">38 900</span><span class="pct up">+7.7%</span><span class="caret">›</span></span></div>
+                  <div class="detail-row" data-sheet="nma"><span class="name">Нематериальные активы</span><span class="right"><span class="num">2 230</span><span class="pct up">+6.2%</span><span class="caret">›</span></span></div>
                   <div class="detail-row" data-sheet="dfv"><span class="name">Долгосрочные финансовые вложения</span><span class="right"><span class="num">8 100</span><span class="pct up">+8.7%</span><span class="caret">›</span></span></div>
                   <div class="detail-row" data-sheet="ovna"><span class="name">Прочие внеоборотные активы</span><span class="right"><span class="num">6 000</span><span class="pct up">+15.8%</span><span class="caret">›</span></span></div>
                 </div>
@@ -1135,16 +1357,16 @@
                 </div>
 
                 <div class="detail-group" style="margin-bottom:12px;">
-                  <div class="g-head"><span class="g-name">Долгосрочные обязательства</span><span class="ghead-value"><span class="num">25 100</span><span class="pct">+12.3%</span></span></div>
-                  <div class="detail-row" data-sheet="dkb"><span class="name">Долгосрочные кредиты банков</span><span class="right"><span class="num">18 000</span><span class="pct up">+10.5%</span><span class="caret">›</span></span></div>
-                  <div class="detail-row" data-sheet="pdo"><span class="name">Прочие долгосрочные обязательства</span><span class="right"><span class="num">7 100</span><span class="pct up">+17.4%</span><span class="caret">›</span></span></div>
-                </div>
-
-                <div class="detail-group" style="margin-bottom:14px;">
                   <div class="g-head"><span class="g-name">Краткосрочные обязательства</span><span class="ghead-value"><span class="num">37 010</span><span class="pct">+6.9%</span></span></div>
                   <div class="detail-row" data-sheet="kz"><span class="name">Кредиторская задолженность</span><span class="right"><span class="num">22 010</span><span class="pct up">+8.1%</span><span class="caret">›</span></span></div>
                   <div class="detail-row" data-sheet="kk"><span class="name">Краткосрочные кредиты</span><span class="right"><span class="num">10 000</span><span class="pct up">+3.0%</span><span class="caret">›</span></span></div>
                   <div class="detail-row" data-sheet="pko"><span class="name">Прочие краткосрочные обязательства</span><span class="right"><span class="num">5 000</span><span class="pct down">-2.5%</span><span class="caret">›</span></span></div>
+                </div>
+
+                <div class="detail-group" style="margin-bottom:14px;">
+                  <div class="g-head"><span class="g-name">Долгосрочные обязательства</span><span class="ghead-value"><span class="num">25 100</span><span class="pct">+12.3%</span></span></div>
+                  <div class="detail-row" data-sheet="dkb"><span class="name">Долгосрочные кредиты банков</span><span class="right"><span class="num">18 000</span><span class="pct up">+10.5%</span><span class="caret">›</span></span></div>
+                  <div class="detail-row" data-sheet="pdo"><span class="name">Прочие долгосрочные обязательства</span><span class="right"><span class="num">7 100</span><span class="pct up">+17.4%</span><span class="caret">›</span></span></div>
                 </div>
               </div>
 
@@ -1171,7 +1393,7 @@
           <div class="sheet-top">
             <div>
               <h2 id="balSheetTitle">Детализация: Запасы</h2>
-              <p>На 31.12.2023</p>
+              <p class="bal-asof">На 08.07.2026</p>
             </div>
             <div class="sheet-close" id="balSheetClose">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
@@ -1182,7 +1404,7 @@
               <col class="col-name"><col class="col-num"><col class="col-num"><col class="col-pct">
             </colgroup>
             <thead>
-              <tr><th>Наименование</th><th>31.12.23</th><th>31.12.22</th><th>Δ, %</th></tr>
+              <tr><th>Наименование</th><th class="bal-year-cur">08.07.26</th><th class="bal-year-prev">31.12.25</th><th>Δ, %</th></tr>
             </thead>
             <tbody id="balSheetBody"></tbody>
           </table>
@@ -1280,15 +1502,6 @@
       sheetOverlay.classList.add('visible');
     }
 
-    function bindSegmented(a, b){
-      const btnA = root.querySelector(`#${a}`);
-      const btnB = root.querySelector(`#${b}`);
-      btnA.addEventListener('click', () => { btnA.classList.add('active'); btnB.classList.remove('active'); });
-      btnB.addEventListener('click', () => { btnB.classList.add('active'); btnA.classList.remove('active'); });
-    }
-    bindSegmented('tabPrev', 'tabCurr');
-    bindSegmented('tabPrev2', 'tabCurr2');
-
     const rows = root.querySelectorAll('.row-list .item-row');
     const emptyHint = root.querySelector('.empty-hint');
 
@@ -1306,7 +1519,10 @@
     }
 
     root.querySelectorAll('.chip-row .chip').forEach(chip => {
-      chip.addEventListener('click', () => setChip(chip.dataset.chip));
+      chip.addEventListener('click', () => {
+        // tapping the already-active chip clears the filter (show everything)
+        setChip(chip.classList.contains('active') ? 'all' : chip.dataset.chip);
+      });
     });
 
     root.querySelectorAll('.mini-card[data-chip]').forEach(card => {
@@ -1333,6 +1549,207 @@
     sheetOverlay.addEventListener('click', (e) => {
       if (e.target === sheetOverlay) closeSheet();
     });
+
+    /* ================= Период (date period filter) ================= */
+    const periodOverlay = root.querySelector('#pnlPeriodOverlay');
+    const periodTitle   = root.querySelector('#pnlPeriodTitle');
+    const periodBack    = root.querySelector('#pnlPeriodBack');
+    const periodClose   = root.querySelector('#pnlPeriodClose');
+    const listView      = root.querySelector('#pnlPeriodListView');
+    const calView       = root.querySelector('#pnlPeriodCalView');
+    const periodVals    = root.querySelectorAll('.period-btn .p-val');
+
+    const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+    const DOW = ['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+
+    const dateRangeEls = root.querySelectorAll('.header .titles .date-range');
+
+    function setPeriodLabel(text){
+      periodVals.forEach(el => { el.textContent = text; });
+    }
+    function setDateRange(text){
+      dateRangeEls.forEach(el => { el.textContent = text; });
+    }
+
+    // header format: "01.04 — 30.06.26"  (start day.month, end day.month.YY)
+    function fmtRange(start, end){
+      const s = `${pad(start.getDate())}.${pad(start.getMonth()+1)}`;
+      const e = `${pad(end.getDate())}.${pad(end.getMonth()+1)}.${String(end.getFullYear()).slice(-2)}`;
+      return `${s} — ${e}`;
+    }
+
+    // exact date range for a picked period within a year
+    // quarters: 1=янв-мар, 2=апр-июн, 3=июл-сен, 4=окт-дек
+    function periodRangeFor(type, value, year){
+      switch (type){
+        case 'month':   return { start:new Date(year, value, 1),       end:new Date(year, value+1, 0) };
+        case 'quarter': return { start:new Date(year, (value-1)*3, 1), end:new Date(year, value*3, 0) };
+        case 'half':    return { start:new Date(year, 0, 1),           end:new Date(year, 6, 0) };
+        case 'nine':    return { start:new Date(year, 0, 1),           end:new Date(year, 9, 0) };
+        case 'year':    return { start:new Date(year, 0, 1),           end:new Date(year, 12, 0) };
+        default: return null;
+      }
+    }
+    function periodLabelFor(type, value, year){
+      switch (type){
+        case 'month':   return `${MONTHS[value]} ${year}`;
+        case 'quarter': return `${value} квартал ${year}`;
+        case 'half':    return `Полугодие ${year}`;
+        case 'nine':    return `9 месяцев ${year}`;
+        case 'year':    return `${year} год`;
+        default: return '';
+      }
+    }
+
+    function showPeriodView(which){
+      const cal = which === 'cal';
+      listView.classList.toggle('active', !cal);
+      calView.classList.toggle('active', cal);
+      periodTitle.textContent = cal ? 'Свой период' : 'Выбор периода';
+      periodBack.style.display = cal ? 'flex' : 'none';
+    }
+
+    function openPeriod(){
+      showPeriodView('list');
+      periodOverlay.classList.add('visible');
+    }
+    function closePeriod(){ periodOverlay.classList.remove('visible'); }
+
+    root.querySelectorAll('[data-open-period]').forEach(el => {
+      el.addEventListener('click', openPeriod);
+    });
+    periodClose.addEventListener('click', closePeriod);
+    periodBack.addEventListener('click', () => showPeriodView('list'));
+    periodOverlay.addEventListener('click', (e) => {
+      if (e.target === periodOverlay) closePeriod();
+    });
+
+    /* ---- grid picker: year → month / quarter / quick period ---- */
+    const yearLabel = root.querySelector('#pnlYearLabel');
+    const customBtn = root.querySelector('#pnlCustomBtn');
+    let pickerYear = new Date().getFullYear();
+    let selected = null;   // { type, value, year }  or  { type:'custom' }
+
+    function markActive(){
+      root.querySelectorAll('.pp-cell').forEach(c => c.classList.remove('active'));
+      customBtn.classList.remove('active');
+      if (!selected) return;
+      if (selected.type === 'custom'){ customBtn.classList.add('active'); return; }
+      if (selected.year !== pickerYear) return;
+      const cell = root.querySelector(`.pp-cell[data-ptype="${selected.type}"][data-pval="${selected.value}"]`);
+      if (cell) cell.classList.add('active');
+    }
+    function renderYear(){ yearLabel.textContent = pickerYear; markActive(); }
+
+    function applyPeriod(type, value, year){
+      const r = periodRangeFor(type, value, year);
+      if (!r) return;
+      selected = { type, value, year };
+      setPeriodLabel(periodLabelFor(type, value, year));
+      setDateRange(fmtRange(r.start, r.end));
+      markActive();
+      closePeriod();
+    }
+
+    root.querySelectorAll('.pp-cell').forEach(cell => {
+      cell.addEventListener('click', () => applyPeriod(cell.dataset.ptype, parseInt(cell.dataset.pval, 10), pickerYear));
+    });
+    root.querySelector('#pnlYearPrev').addEventListener('click', () => { pickerYear--; renderYear(); });
+    root.querySelector('#pnlYearNext').addEventListener('click', () => { pickerYear++; renderYear(); });
+    customBtn.addEventListener('click', () => { showPeriodView('cal'); renderCal(); });
+
+    /* ---- calendar range picker ---- */
+    const calTitle = root.querySelector('#pnlCalTitle');
+    const calGrid  = root.querySelector('#pnlCalGrid');
+    const calFrom  = root.querySelector('#pnlCalFrom');
+    const calTo    = root.querySelector('#pnlCalTo');
+    const calApply = root.querySelector('#pnlCalApply');
+    const calPrev  = root.querySelector('#pnlCalPrev');
+    const calNext  = root.querySelector('#pnlCalNext');
+
+    const today = new Date();
+    let viewY = today.getFullYear();
+    let viewM = today.getMonth();
+    let rangeStart = null;   // {y,m,d} timestamps stored as Date
+    let rangeEnd = null;
+
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function fmtDate(d){ return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()}`; }
+    function sameDay(a, b){ return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+    function stripTime(d){ return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+
+    function updateRangeFields(){
+      if (rangeStart){ calFrom.classList.remove('empty'); calFrom.querySelector('.cr-date').textContent = fmtDate(rangeStart); }
+      else { calFrom.classList.add('empty'); calFrom.querySelector('.cr-date').textContent = 'Выберите'; }
+      if (rangeEnd){ calTo.classList.remove('empty'); calTo.querySelector('.cr-date').textContent = fmtDate(rangeEnd); }
+      else { calTo.classList.add('empty'); calTo.querySelector('.cr-date').textContent = 'Выберите'; }
+      // focus hint
+      const pickingEnd = rangeStart && !rangeEnd;
+      calFrom.classList.toggle('focus', !pickingEnd);
+      calTo.classList.toggle('focus', !!pickingEnd);
+      calApply.disabled = !(rangeStart && rangeEnd);
+    }
+
+    function renderCal(){
+      calTitle.textContent = `${MONTHS[viewM]} ${viewY}`;
+      let html = DOW.map(d => `<div class="cal-dow">${d}</div>`).join('');
+      const first = new Date(viewY, viewM, 1);
+      // JS getDay: 0=Sun..6=Sat -> convert to Mon-first index 0..6
+      let lead = (first.getDay() + 6) % 7;
+      const daysInMonth = new Date(viewY, viewM + 1, 0).getDate();
+      for (let i = 0; i < lead; i++) html += `<div class="cal-cell empty"></div>`;
+      for (let d = 1; d <= daysInMonth; d++){
+        const cur = new Date(viewY, viewM, d);
+        let cls = 'cal-cell';
+        if (rangeStart && rangeEnd){
+          const t = cur.getTime(), s = rangeStart.getTime(), e = rangeEnd.getTime();
+          if (t > s && t < e) cls += ' in-range';
+          if (sameDay(cur, rangeStart)) cls += ' range-start selected';
+          if (sameDay(cur, rangeEnd)) cls += ' range-end selected';
+        } else if (rangeStart && sameDay(cur, rangeStart)){
+          cls += ' selected';
+        }
+        html += `<div class="${cls}" data-day="${d}"><span>${d}</span></div>`;
+      }
+      calGrid.innerHTML = html;
+
+      calGrid.querySelectorAll('.cal-cell[data-day]').forEach(cell => {
+        cell.addEventListener('click', () => {
+          const picked = new Date(viewY, viewM, parseInt(cell.dataset.day, 10));
+          if (!rangeStart || (rangeStart && rangeEnd)){
+            rangeStart = picked; rangeEnd = null;          // start fresh
+          } else {
+            if (picked.getTime() < rangeStart.getTime()){   // clicked before start -> swap
+              rangeEnd = rangeStart; rangeStart = picked;
+            } else {
+              rangeEnd = picked;
+            }
+          }
+          updateRangeFields();
+          renderCal();
+        });
+      });
+    }
+
+    calPrev.addEventListener('click', () => { viewM--; if (viewM < 0){ viewM = 11; viewY--; } renderCal(); });
+    calNext.addEventListener('click', () => { viewM++; if (viewM > 11){ viewM = 0; viewY++; } renderCal(); });
+
+    calApply.addEventListener('click', () => {
+      if (!(rangeStart && rangeEnd)) return;
+      selected = { type: 'custom' };
+      setPeriodLabel(fmtRange(rangeStart, rangeEnd));
+      setDateRange(fmtRange(rangeStart, rangeEnd));
+      markActive();
+      closePeriod();
+    });
+
+    // default period = current quarter of the current year
+    (function initPeriod(){
+      const now = new Date();
+      pickerYear = now.getFullYear();
+      renderYear();
+      applyPeriod('quarter', Math.floor(now.getMonth() / 3) + 1, pickerYear);
+    })();
   })();
 </script>
 
@@ -1344,6 +1761,22 @@
     const sheetOverlay = root.querySelector('#balSheetOverlay');
     const sheetTitle = root.querySelector('#balSheetTitle');
     const sheetBody = root.querySelector('#balSheetBody');
+
+    // "as of" dates: current year to-date (as of today) vs last year-end
+    (function initBalanceDates(){
+      const now = new Date();
+      const curY = now.getFullYear();   // текущий год
+      const prevY = curY - 1;           // прошлый год
+      const pad = n => String(n).padStart(2, '0');
+      const yy = y => String(y).slice(-2);
+      const today = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${curY}`;      // 08.07.2026
+      const todayShort = `${pad(now.getDate())}.${pad(now.getMonth() + 1)}.${yy(curY)}`; // 08.07.26
+      root.querySelectorAll('[data-year="cur"]').forEach(el => el.textContent = `На ${today}`);
+      root.querySelectorAll('[data-year="prev"]').forEach(el => el.textContent = `На 31.12.${prevY}`);
+      root.querySelectorAll('.bal-asof').forEach(el => el.textContent = `На ${today}`);
+      root.querySelectorAll('.bal-year-cur').forEach(el => el.textContent = todayShort);
+      root.querySelectorAll('.bal-year-prev').forEach(el => el.textContent = `31.12.${yy(prevY)}`);
+    })();
 
     const sheetData = {
       nma:  { title: 'Нематериальные активы', total: 'Итого', rows: [
